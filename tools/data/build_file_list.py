@@ -11,6 +11,7 @@ from tools.data.parse_file_list import (parse_directory, parse_hmdb51_split,
                                         parse_kinetics_splits,
                                         parse_mit_splits, parse_mmit_splits,
                                         parse_sthv1_splits, parse_sthv2_splits,
+                                        parse_household_splits,
                                         parse_ucf101_splits)
 
 
@@ -21,7 +22,7 @@ def parse_args():
         type=str,
         choices=[
             'ucf101', 'kinetics400', 'kinetics600', 'kinetics700', 'thumos14',
-            'sthv1', 'sthv2', 'mit', 'mmit', 'activitynet', 'hmdb51', 'jester'
+            'sthv1', 'sthv2', 'mit', 'mmit', 'activitynet', 'hmdb51', 'jester', 'household'
         ],
         help='dataset to be built file list')
     parser.add_argument(
@@ -195,6 +196,8 @@ def main():
         splits = parse_sthv1_splits(args.level)
     elif args.dataset == 'sthv2':
         splits = parse_sthv2_splits(args.level)
+    elif args.dataset == 'household':
+        splits = parse_household_splits(args.level)
     elif args.dataset == 'mit':
         splits = parse_mit_splits()
     elif args.dataset == 'mmit':
@@ -208,7 +211,7 @@ def main():
     else:
         raise ValueError(
             f"Supported datasets are 'ucf101, sthv1, sthv2', 'jester', "
-            f"'mmit', 'mit', 'kinetics400', 'kinetics600', 'kinetics700', but "
+            f"'mmit', 'mit', 'kinetics400', 'kinetics600', 'kinetics700', 'household', but "
             f'got {args.dataset}')
 
     assert len(splits) == args.num_split
