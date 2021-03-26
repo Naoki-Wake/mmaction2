@@ -14,7 +14,7 @@ def load_json(file):
 data_file = '/dataset/annotation'
 info_file = f'{data_file}/video_info_custom.csv' #f'{data_file}/video_info_new.csv'
 ann_file = f'{data_file}/annotation_custom.json' #f'{data_file}/anet_anno_action.json'
-feat_dir = '/dataset/maction_feat'
+feat_dir = '/dataset/maction_feat_with_label'
 import os.path as osp
 anno_database = load_json(ann_file)
 

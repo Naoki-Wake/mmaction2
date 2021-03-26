@@ -10,6 +10,7 @@ import torch
 from mmaction.datasets.pipelines import Compose
 from mmaction.models import build_model
 
+import pdb
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Extract TSN Feature')
@@ -69,7 +70,7 @@ def main():
         dict(type='ToTensor', keys=['imgs'])
     ]
     data_pipeline = Compose(data_pipeline)
-
+    #pdb.set_trace()
     # define TSN R50 model, the model is used as the feature extractor
     model_cfg = dict(
         type='Recognizer2D',
@@ -80,7 +81,7 @@ def main():
             norm_eval=False),
         cls_head=dict(
             type='TSNHead',
-            num_classes=200,
+            num_classes=400,
             in_channels=2048,
             spatial_type='avg',
             consensus=dict(type='AvgConsensus', dim=1)),
@@ -88,6 +89,7 @@ def main():
     model = build_model(model_cfg)
     # load pretrained weight into the feature extractor
     state_dict = torch.load(args.ckpt)['state_dict']
+    #pdb.set_trace()
     model.load_state_dict(state_dict)
     model = model.cuda()
     model.eval()
@@ -139,6 +141,7 @@ def main():
             return np.concatenate(results)
 
         feat = forward_data(model, imgs)
+        #pdb.set_trace()
         with open(output_file, 'wb') as fout:
             pickle.dump(feat, fout)
         prog_bar.update()
