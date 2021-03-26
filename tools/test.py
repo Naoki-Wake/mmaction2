@@ -146,7 +146,23 @@ def main():
         if output_config:
             out = output_config['out']
             print(f'\nwriting results to {out}')
-            dataset.dump_results(outputs, **output_config)
+            #import pdb
+            #pdb.set_trace()
+            print(out[-4:])
+            if out[-4:] == 'json':
+                result_dict = {}
+                for result in outputs:
+                    video_name = result['video_name']
+                    result_dict[video_name] = result['proposal_list']
+                output_dict = {
+                    'version': 'VERSION 1.3',
+                    'results': result_dict,
+                    'external_data': {}
+                }
+                mmcv.dump(output_dict, out)                
+            else:
+                dataset.dump_results(outputs, **output_config)
+
         if eval_config:
             eval_res = dataset.evaluate(outputs, **eval_config)
             for name, val in eval_res.items():

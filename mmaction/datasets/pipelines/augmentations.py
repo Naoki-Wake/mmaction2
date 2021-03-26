@@ -660,9 +660,11 @@ class Normalize(object):
             return results
         elif modality == 'Flow':
             num_imgs = len(results['imgs'])
+            print(str(num_imgs))
+            print(self.mean.shape)
             assert num_imgs % 2 == 0
-            assert self.mean.shape[0] == 2
-            assert self.std.shape[0] == 2
+            #assert self.mean.shape[0] == 2
+            #assert self.std.shape[0] == 2
             n = num_imgs // 2
             h, w = results['imgs'][0].shape
             x_flow = np.empty((n, h, w), dtype=np.float32)

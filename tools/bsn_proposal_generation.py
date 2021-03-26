@@ -173,6 +173,8 @@ def main():
     pgm_proposals_dir = cfg.pgm_proposals_dir
     pgm_features_dir = cfg.pgm_features_dir
     if args.mode == 'test':
+        #import pdb
+        #pdb.set_trace()
         generate_proposals(cfg.ann_file_val, tem_results_dir,
                            pgm_proposals_dir, **cfg.pgm_proposals_cfg)
         print('\nFinish proposal generation')

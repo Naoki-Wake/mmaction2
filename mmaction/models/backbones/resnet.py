@@ -431,6 +431,8 @@ class ResNet(nn.Module):
         """
 
         weight_tv_name = module_name_tv + '.weight'
+        #import pdb
+        #pdb.set_trace()
         conv.weight.data.copy_(state_dict_tv[weight_tv_name])
         loaded_param_names.append(weight_tv_name)
 
@@ -491,11 +493,13 @@ class ResNet(nn.Module):
                     original_conv_name = name
                     # layer{X}.{Y}.conv{n}.bn->layer{X}.{Y}.bn{n}
                     original_bn_name = name.replace('conv', 'bn')
+                print(name)
                 self._load_conv_params(module.conv, state_dict_torchvision,
                                        original_conv_name, loaded_param_names)
                 self._load_bn_params(module.bn, state_dict_torchvision,
                                      original_bn_name, loaded_param_names)
-
+        import pdb
+        pdb.set_trace()
         # check if any parameters in the 2d checkpoint are not loaded
         remaining_names = set(
             state_dict_torchvision.keys()) - set(loaded_param_names)

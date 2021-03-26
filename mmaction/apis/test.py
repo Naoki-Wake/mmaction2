@@ -29,7 +29,8 @@ def single_gpu_test(model, data_loader):
         with torch.no_grad():
             result = model(return_loss=False, **data)
         results.extend(result)
-
+        #import pdb
+        #pdb.set_trace()
         # use the first key as main key to calculate the batch size
         batch_size = len(next(iter(data.values())))
         for _ in range(batch_size):
