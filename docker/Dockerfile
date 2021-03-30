@@ -12,11 +12,11 @@ RUN apt-get update && apt-get install -y git ninja-build libglib2.0-0 libsm6 lib
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Inserted to use caches
+ENV updated-on 29-March-21
+
 # Install mmcv-full
 RUN pip install mmcv-full==latest+torch1.6.0+cu101 -f https://download.openmmlab.com/mmcv/dist/index.html
-
-# Inserted to use caches
-ENV updated-on 26-March-21
 
 # Install MMAction2
 RUN conda clean --all

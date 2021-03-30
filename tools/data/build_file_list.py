@@ -155,8 +155,9 @@ def build_file_list(splits, frame_info, shuffle=False):
         return rgb_list, flow_list
 
     train_rgb_list, train_flow_list = build_list(splits[0])
-    test_rgb_list, test_flow_list = build_list(splits[1])
-    return (train_rgb_list, test_rgb_list), (train_flow_list, test_flow_list)
+    valid_rgb_list, valid_flow_list = build_list(splits[1])
+    test_rgb_list, test_flow_list = build_list(splits[2])
+    return (train_rgb_list, valid_rgb_list, test_rgb_list), (train_flow_list, valid_flow_list, test_flow_list)
 
 
 def main():

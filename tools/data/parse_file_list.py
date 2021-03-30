@@ -290,11 +290,11 @@ def parse_household_splits(level):
     """
     # Read the annotations
     # yapf: disable
-    class_index_file = 'data/sthv2/annotations/shousehold-labels.json'  # noqa
+    class_index_file = 'data/household/annotations/household-labels.json'  # noqa
     # yapf: enable
-    train_file = 'data/sthv2/annotations/household-train.json'
-    val_file = 'data/sthv2/annotations/household-validation.json'
-    test_file = 'data/sthv2/annotations/household-test.json'
+    train_file = 'data/household/annotations/household-train.json'
+    val_file = 'data/household/annotations/household-validation.json'
+    test_file = 'data/household/annotations/household-test.json'
 
     with open(class_index_file, 'r') as fin:
         class_mapping = json.loads(fin.read())
@@ -309,9 +309,7 @@ def parse_household_splits(level):
         if test_mode:
             return video
         else:
-            template = item['template'].replace('[', '')
-            template = template.replace(']', '')
-            label = int(class_mapping[template])
+            label = int(class_mapping[item['label']])
             return video, label
 
     with open(train_file, 'r') as fin:
@@ -324,7 +322,8 @@ def parse_household_splits(level):
 
     with open(test_file, 'r') as fin:
         items = json.loads(fin.read())
-        test_list = [line_to_map(item, test_mode=True) for item in items]
+        #test_list = [line_to_map(item, test_mode=True) for item in items]
+        test_list = [line_to_map(item) for item in items]
 
     splits = ((train_list, val_list, test_list), )
     return splits
