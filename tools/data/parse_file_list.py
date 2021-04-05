@@ -278,6 +278,70 @@ def parse_sthv2_splits(level):
     splits = ((train_list, val_list, test_list), )
     return splits
 
+def parse_sthv2_pretrain_splits(level):
+    """Parse Something-Something dataset V2 into "train", "val" splits.
+
+    Args:
+        level (int): Directory level of data. 1 for the single-level directory,
+            2 for the two-level directory.
+
+    Returns:
+        list: "train", "val", "test" splits of Something-Something V2 dataset.
+    """
+    # Read the annotations
+    # yapf: disable
+    class_index_remap_file = 'data/sthv2/annotations/something-something-v2-labels_remap.json'  # noqa
+    class_index_file = 'data/sthv2/annotations/something-something-v2-labels.json'  # noqa
+    # yapf: enable
+    train_file = 'data/sthv2/annotations/something-something-v2-train.json'
+    val_file = 'data/sthv2/annotations/something-something-v2-validation.json'
+    test_file = 'data/sthv2/annotations/something-something-v2-test.json'
+
+    with open(class_index_file, 'r') as fin:
+        class_mapping = json.loads(fin.read())
+
+    with open(class_index_remap_file, 'r') as fin:
+        class_mapping_remap = json.loads(fin.read())
+
+    def line_to_map(item, test_mode=False):
+        video = item['id']
+        if level == 1:
+            video = osp.basename(video)
+        elif level == 2:
+            video = osp.join(
+                osp.basename(osp.dirname(video)), osp.basename(video))
+        if test_mode:
+            return video
+        else:
+            template = item['template'].replace('[', '')
+            template = template.replace(']', '')
+            #label = int(class_mapping[template])
+            orig_label = class_mapping[template]
+            if orig_label in class_mapping_remap.keys():
+                label = int(class_mapping_remap[orig_label])
+                return video, label
+            else:
+                return None
+            
+
+    with open(train_file, 'r') as fin:
+        items = json.loads(fin.read())
+        train_list = [line_to_map(item) for item in items]
+        train_list = list(filter(None, train_list))
+
+    with open(val_file, 'r') as fin:
+        items = json.loads(fin.read())
+        val_list = [line_to_map(item) for item in items]
+        val_list = list(filter(None, val_list))
+        
+    with open(test_file, 'r') as fin:
+        items = json.loads(fin.read())
+        test_list = [line_to_map(item, test_mode=True) for item in items]
+        test_list = list(filter(None, test_list))
+
+    splits = ((train_list, val_list, test_list), )
+    return splits
+
 def parse_household_splits(level):
     """Parse household dataset V2 into "train", "val" splits.
 

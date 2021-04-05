@@ -11,9 +11,11 @@ from .tpn_head import TPNHead
 from .tsm_head import TSMHead
 from .tsn_head import TSNHead
 from .x3d_head import X3DHead
+from .household_head_nonaddlayer import HOUSEHOLDHead_NONADDLAYER
+from .household_head_addlayer import HOUSEHOLDHead_ADDLAYER
 
 __all__ = [
     'TSNHead', 'I3DHead', 'BaseHead', 'TSMHead', 'SlowFastHead', 'SSNHead',
     'TPNHead', 'AudioTSNHead', 'X3DHead', 'BBoxHeadAVA', 'AVARoIHead',
-    'FBOHead', 'LFBInferHead'
+    'FBOHead', 'LFBInferHead', 'HOUSEHOLDHead_ADDLAYER', 'HOUSEHOLDHead_NONADDLAYER'
 ]

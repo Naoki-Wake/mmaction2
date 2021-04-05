@@ -11,7 +11,7 @@ from tools.data.parse_file_list import (parse_directory, parse_hmdb51_split,
                                         parse_kinetics_splits,
                                         parse_mit_splits, parse_mmit_splits,
                                         parse_sthv1_splits, parse_sthv2_splits,
-                                        parse_household_splits,
+                                        parse_household_splits, parse_sthv2_pretrain_splits,
                                         parse_ucf101_splits)
 
 
@@ -22,7 +22,7 @@ def parse_args():
         type=str,
         choices=[
             'ucf101', 'kinetics400', 'kinetics600', 'kinetics700', 'thumos14',
-            'sthv1', 'sthv2', 'mit', 'mmit', 'activitynet', 'hmdb51', 'jester', 'household'
+            'sthv1', 'sthv2', 'mit', 'mmit', 'activitynet', 'hmdb51', 'jester', 'household', 'sthv2_pretrain'
         ],
         help='dataset to be built file list')
     parser.add_argument(
@@ -84,7 +84,7 @@ def parse_args():
     return args
 
 
-def build_file_list(splits, frame_info, shuffle=False):
+def build_file_list(splits, frame_info, shuffle=False, mode = None):
     """Build file list for a certain data split.
 
     Args:
@@ -156,8 +156,12 @@ def build_file_list(splits, frame_info, shuffle=False):
 
     train_rgb_list, train_flow_list = build_list(splits[0])
     valid_rgb_list, valid_flow_list = build_list(splits[1])
-    test_rgb_list, test_flow_list = build_list(splits[2])
-    return (train_rgb_list, valid_rgb_list, test_rgb_list), (train_flow_list, valid_flow_list, test_flow_list)
+    #import pdb;pdb.set_trace()
+    if mode == 'household':
+        test_rgb_list, test_flow_list = build_list(splits[2])
+        return (train_rgb_list, valid_rgb_list, test_rgb_list), (train_flow_list, valid_flow_list, test_flow_list)
+    else:
+        return (train_rgb_list, valid_rgb_list), (train_flow_list, valid_flow_list)
 
 
 def main():
@@ -197,6 +201,8 @@ def main():
         splits = parse_sthv1_splits(args.level)
     elif args.dataset == 'sthv2':
         splits = parse_sthv2_splits(args.level)
+    elif args.dataset == 'sthv2_pretrain':
+        splits = parse_sthv2_pretrain_splits(args.level)
     elif args.dataset == 'household':
         splits = parse_household_splits(args.level)
     elif args.dataset == 'mit':
@@ -212,13 +218,14 @@ def main():
     else:
         raise ValueError(
             f"Supported datasets are 'ucf101, sthv1, sthv2', 'jester', "
-            f"'mmit', 'mit', 'kinetics400', 'kinetics600', 'kinetics700', 'household', but "
+            f"'mmit', 'mit', 'kinetics400', 'kinetics600', 'kinetics700', 'household', 'sthv2_pretrain', but "
             f'got {args.dataset}')
 
     assert len(splits) == args.num_split
 
     out_path = args.out_root_path + args.dataset
-
+    if args.dataset == 'sthv2_pretrain':
+        out_path = args.out_root_path + 'sthv2'
     if len(splits) > 1:
         for i, split in enumerate(splits):
             file_lists = build_file_list(
@@ -240,7 +247,7 @@ def main():
                 with open(osp.join(out_path, val_name), 'w') as f:
                     json.dump(val_list, f)
     else:
-        lists = build_file_list(splits[0], frame_info, shuffle=args.shuffle)
+        lists = build_file_list(splits[0], frame_info, shuffle=args.shuffle, mode = args.dataset)
 
         if args.subset == 'train':
             ind = 0
@@ -253,6 +260,9 @@ def main():
                              f'but got {args.subset}.')
 
         filename = f'{args.dataset}_{args.subset}_list_{args.format}.txt'
+        if args.dataset == 'sthv2_pretrain':
+            filename = f'sthv2_{args.subset}_list_{args.format}.txt'
+
         if args.output_format == 'txt':
             with open(osp.join(out_path, filename), 'w') as f:
                 f.writelines(lists[0][ind])

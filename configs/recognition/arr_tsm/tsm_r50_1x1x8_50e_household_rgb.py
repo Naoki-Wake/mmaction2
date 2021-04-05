@@ -1,11 +1,14 @@
+#_base_ = [
+#    '../../_base_/models/tsm_r50.py', '../../_base_/schedules/sgd_tsm_50e.py',
+#    '../../_base_/default_runtime.py'
+#]
 _base_ = [
-    '../../_base_/models/tsm_r50.py', '../../_base_/schedules/sgd_tsm_50e.py',
+    '../../_base_/models/household_r50.py', '../../_base_/schedules/sgd_tsm_50e.py',
     '../../_base_/default_runtime.py'
 ]
-
 # model settings
-model = dict(cls_head=dict(num_classes=174))
-
+model = dict(cls_head=dict(num_classes=26))#174
+load_from = '/mmaction2/pretrained_models/tsm_r50_1x1x8_50e_sthv1_rgb_20210203-01dce462.pth'  # model path can be found in model zoo
 # dataset settings
 dataset_type = 'RawframeDataset'
 data_root = 'data/household/rawframes'

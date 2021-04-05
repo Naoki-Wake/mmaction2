@@ -113,6 +113,7 @@ venv.bak/
 *.log.json
 benchlist.txt
 work_dirs/
+work_dirs_analyses/
 
 # Pytorch
 *.pth
