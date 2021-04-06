@@ -13,9 +13,12 @@ load_from = '/mmaction2/pretrained_models/tsm_r50_1x1x8_50e_sthv1_rgb_20210203-0
 dataset_type = 'RawframeDataset'
 data_root = 'data/household/rawframes'
 data_root_val = 'data/household/rawframes'
-ann_file_train = 'data/household/household_train_list_rawframes.txt'
-ann_file_val = 'data/household/household_val_list_rawframes.txt'
-ann_file_test = 'data/household/household_test_list_rawframes.txt'
+#ann_file_train = 'data/household/household_train_list_rawframes.txt'
+#ann_file_val = 'data/household/household_val_list_rawframes.txt'
+#ann_file_test = 'data/household/household_test_list_rawframes.txt'
+ann_file_train = 'data/household/annotations_nonignorelaterality/bac_configtexts/household_train_list_rawframes.txt'
+ann_file_val = 'data/household/annotations_nonignorelaterality/bac_configtexts/household_val_list_rawframes.txt'
+ann_file_test = 'data/household/annotations_nonignorelaterality/bac_configtexts/household_test_list_rawframes.txt'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
 train_pipeline = [

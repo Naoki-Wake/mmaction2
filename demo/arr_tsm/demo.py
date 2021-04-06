@@ -109,9 +109,9 @@ def get_output(video_path,
             resize_algorithm=resize_algorithm)
 
     duration_video_clip = video_clips.duration
-    text_clips = TextClip(label, font_size=font_size, color=font_color)
+    text_clips = TextClip(label, fontsize=font_size, color=font_color)
     text_clips = (
-        text_clips.with_position(
+        text_clips.set_position(
             ('right', 'bottom'),
             relative=True).set_duration(duration_video_clip))
 
