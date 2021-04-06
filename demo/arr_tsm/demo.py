@@ -233,7 +233,7 @@ def main():
         #cmd = "ffmpeg -i {} -vf scale=640:360  -y {}".\
         #    format(args.video, copied_fname)
         #check_call(shlex.split(cmd), universal_newlines=True)
-        print(split_count)
+        #print(split_count)
         '''for n in range(split_count):
             split_start = args.split_time * n
             cmd = "ffmpeg -i {} -vcodec copy  -strict -2 -ss {} -t {} -y {}-{}.{}".\
@@ -257,7 +257,7 @@ def main():
             lines = tmp_file.readlines()
         for line in lines:
             dummy_filenames.append(os.path.join(tmp_path,line.replace('\n','')))
-        print(dummy_filenames)
+        #print(dummy_filenames)
         for video_block in dummy_filenames:
             video_block_out = os.path.join(os.path.dirname(video_block), 'out_' + os.path.basename(video_block))
             if output_layer_names:
