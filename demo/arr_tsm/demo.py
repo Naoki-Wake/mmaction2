@@ -47,6 +47,11 @@ def parse_args():
         '--resize-algorithm',
         default='bicubic',
         help='resize algorithm applied to generate video')
+    parser.add_argument(
+        '--split-time',
+        default=None,
+        type=int,
+        help='split a video into windows, then apply the recognition, then concatnate the results. Split or chunk size in seconds, for example 10')
     parser.add_argument('--out-filename', default=None, help='output filename')
     args = parser.parse_args()
     return args
@@ -109,14 +114,17 @@ def get_output(video_path,
             resize_algorithm=resize_algorithm)
 
     duration_video_clip = video_clips.duration
-    text_clips = TextClip(label, fontsize=font_size, color=font_color)
+    #print(duration_video_clip)
+    text_clips = TextClip(label, fontsize=font_size, color=font_color, bg_color='white', font='Helvetica-Bold')
     text_clips = (
         text_clips.set_position(
-            ('right', 'bottom'),
+            ('left', 'top'),
             relative=True).set_duration(duration_video_clip))
 
+    #print(video_clips.duration)
+    #print(text_clips.duration)
     video_clips = CompositeVideoClip([video_clips, text_clips])
-
+    #print(video_clips.duration)
     out_type = osp.splitext(out_filename)[1][1:]
     if out_type == 'gif':
         video_clips.write_gif(out_filename)
@@ -139,43 +147,169 @@ def main():
     output_layer_names = None
 
     # test a single video or rawframes of a single video
-    if output_layer_names:
-        results, returned_feature = inference_recognizer(
-            model,
-            args.video,
-            args.label,
-            use_frames=args.use_frames,
-            outputs=output_layer_names)
-    else:
-        results = inference_recognizer(
-            model, args.video, args.label, use_frames=args.use_frames)
-
-    print('The top-5 labels with corresponding scores are:')
-    for result in results:
-        print(f'{result[0]}: ', result[1])
-
-    if args.out_filename is not None:
-
-        if args.target_resolution is not None:
-            if args.target_resolution[0] == -1:
-                args.target_resolution[0] = None
-            if args.target_resolution[1] == -1:
-                args.target_resolution[1] = None
-            args.target_resolution = tuple(args.target_resolution)
+    if args.split_time is None:
+        if output_layer_names:
+            results, returned_feature = inference_recognizer(
+                model,
+                args.video,
+                args.label,
+                use_frames=args.use_frames,
+                outputs=output_layer_names)
         else:
-            args.target_resolution = (None, None)
+            results = inference_recognizer(
+                model, args.video, args.label, use_frames=args.use_frames)
 
-        get_output(
-            args.video,
-            args.out_filename,
-            results[0][0],
-            fps=args.fps,
-            font_size=args.font_size,
-            font_color=args.font_color,
-            target_resolution=args.target_resolution,
-            resize_algorithm=args.resize_algorithm,
-            use_frames=args.use_frames)
+        print('The top-5 labels with corresponding scores are:')
+        for result in results:
+            print(f'{result[0]}: ', result[1])
+
+        if args.out_filename is not None:
+
+            if args.target_resolution is not None:
+                if args.target_resolution[0] == -1:
+                    args.target_resolution[0] = None
+                if args.target_resolution[1] == -1:
+                    args.target_resolution[1] = None
+                args.target_resolution = tuple(args.target_resolution)
+            else:
+                args.target_resolution = (None, None)
+            label_show = ''
+            for result in results:
+                label_show = label_show + result[0]+ ': {:.2g}'.format(result[1]) + '\n'
+
+            get_output(
+                args.video,
+                args.out_filename,
+                label_show[:-1],
+                fps=args.fps,
+                font_size=args.font_size,
+                font_color=args.font_color,
+                target_resolution=args.target_resolution,
+                resize_algorithm=args.resize_algorithm,
+                use_frames=args.use_frames)
+
+    if args.split_time is not None:
+        #https://stackoverflow.com/questions/28884159/using-python-script-to-cut-long-videos-into-chunks-in-ffmpeg
+        #https://nico-lab.net/segment_muxer_with_ffmpeg/
+        import re
+        import math
+        length_regexp = 'Duration: (\d{2}):(\d{2}):(\d{2})\.\d+,'
+        re_length = re.compile(length_regexp)
+
+        from subprocess import check_call, PIPE, Popen
+        import shlex
+        import os
+        if args.split_time <= 0:
+            print("Split length can't be 0")
+            raise SystemExit
+
+        p1 = Popen(["ffmpeg", "-i", args.video], stdout=PIPE, stderr=PIPE, universal_newlines=True)
+        # get p1.stderr as input
+        output = Popen(["grep", 'Duration'], stdin=p1.stderr, stdout=PIPE, universal_newlines=True)
+        p1.stdout.close()
+        matches = re_length.search(output.stdout.read())
+        if matches:
+            video_length = int(matches.group(1)) * 3600 + \
+                        int(matches.group(2)) * 60 + \
+                        int(matches.group(3))
+            print("Video length in seconds: {}".format(video_length))
+        else:
+            print("Can't determine video length.")
+            raise SystemExit
+        split_count = math.ceil(video_length / args.split_time)
+        if split_count == 1:
+            print("Video length is less than the target split length.")
+            raise SystemExit
+
+        fname = os.path.basename(args.video)
+        dirname = os.path.dirname(args.video)
+        fname_base, ext = fname.rsplit(".", 1)
+        tmp_path = os.path.join(dirname,'tmpdir')
+        dummy_filenames = []
+        if not os.path.isdir(tmp_path):
+            os.makedirs(tmp_path)
+
+        #copied_fname = "{}.{}".format(os.path.join(tmp_path,fname_base), ext)
+        #cmd = "ffmpeg -i {} -vf scale=640:360  -y {}".\
+        #    format(args.video, copied_fname)
+        #check_call(shlex.split(cmd), universal_newlines=True)
+        print(split_count)
+        '''for n in range(split_count):
+            split_start = args.split_time * n
+            cmd = "ffmpeg -i {} -vcodec copy  -strict -2 -ss {} -t {} -y {}-{}.{}".\
+                format(args.video, split_start, args.split_time, os.path.join(tmp_path,fname_base), n, ext)
+            dummy_filenames.append("{}-{}.{}".format(os.path.join(tmp_path,fname_base), n, ext))
+            print("About to run: {}".format(cmd))
+            check_call(shlex.split(cmd), universal_newlines=True)
+            tmp_fname = "{}-{}.{}".format(os.path.join(tmp_path,fname_base), n, ext)'''
 
 
+        cmd = "ffmpeg -i {} -map 0 -c copy -flags +global_header -f segment -segment_time {} -y -segment_list {} -segment_format_options movflags=+faststart -reset_timestamps 1 {}-%02d.{}".\
+            format(args.video, args.split_time, os.path.join(tmp_path,'list_gen.txt'), os.path.join(tmp_path,fname_base), ext)
+        print("About to run: {}".format(cmd))
+        check_call(shlex.split(cmd), universal_newlines=True)
+        #    cmd = "ffmpeg -i {} -vf scale=640:360 -y {}".\
+        #        format(tmp_fname,tmp_fname)
+        #    print("About to run: {}".format(cmd))
+        #    check_call(shlex.split(cmd), universal_newlines=True)
+        
+        with open(os.path.join(tmp_path,'list_gen.txt'), 'r') as tmp_file:
+            lines = tmp_file.readlines()
+        for line in lines:
+            dummy_filenames.append(os.path.join(tmp_path,line.replace('\n','')))
+        print(dummy_filenames)
+        for video_block in dummy_filenames:
+            video_block_out = os.path.join(os.path.dirname(video_block), 'out_' + os.path.basename(video_block))
+            if output_layer_names:
+                results, returned_feature = inference_recognizer(
+                    model,
+                    video_block,
+                    args.label,
+                    use_frames=args.use_frames,
+                    outputs=output_layer_names)
+            else:
+                results = inference_recognizer(
+                    model, video_block, args.label, use_frames=args.use_frames)
+
+            if args.out_filename is not None:
+                if args.target_resolution is not None:
+                    if args.target_resolution[0] == -1:
+                        args.target_resolution[0] = None
+                    if args.target_resolution[1] == -1:
+                        args.target_resolution[1] = None
+                    args.target_resolution = tuple(args.target_resolution)
+                else:
+                    args.target_resolution = (None, None)
+                print('The top-5 labels with corresponding scores are:')
+                for result in results:
+                    print(f'{result[0]}: ', result[1])
+                label_show = ''
+                for result in results:
+                    label_show = label_show + result[0]+ ': {:.2g}'.format(result[1]) + '\n'
+
+                get_output(
+                    video_path=video_block,
+                    out_filename=video_block_out,
+                    label=label_show[:-1],
+                    fps=args.fps,
+                    font_size=args.font_size,
+                    font_color=args.font_color,
+                    target_resolution=args.target_resolution,
+                    resize_algorithm=args.resize_algorithm,
+                    use_frames=args.use_frames)
+        # concatnate files
+        with open(os.path.join(tmp_path,'list.txt'), 'w') as tmp_file:
+            for video_block in dummy_filenames:
+                tmp_file.write("file " +   'out_' + os.path.basename(video_block) + "\n")
+        cmd = "ffmpeg -f concat -i {} -c copy -y {}".\
+            format(os.path.join(tmp_path,'list.txt'), args.out_filename)
+        #cmd = "ffmpeg -i {} -c copy -segment_format_options movflags=+faststart {}".\
+        #    format(os.path.join(tmp_path,'list.txt'), args.out_filename)
+        print("About to run: {}".format(cmd))
+        check_call(shlex.split(cmd), universal_newlines=True)
+        import shutil
+        #import pdb
+        #pdb.set_trace()
+        shutil.rmtree(tmp_path)
 if __name__ == '__main__':
     main()

@@ -1,5 +1,5 @@
-_base_ = ['../../_base_/models/household_addlayer_r50.py']
-
+#_base_ = ['../../_base_/models/household_addlayer_r50.py']
+_base_ = ['../../_base_/models/household_nonaddlayer_r50.py']
 # dataset settings
 dataset_type = 'VideoDataset'
 img_norm_cfg = dict(
