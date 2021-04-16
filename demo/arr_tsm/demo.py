@@ -258,8 +258,16 @@ def main():
         for line in lines:
             dummy_filenames.append(os.path.join(tmp_path,line.replace('\n','')))
         #print(dummy_filenames)
-        for video_block in dummy_filenames:
+
+        import pandas as pd
+        
+        with open(args.label, 'r') as f:
+            label = [line.strip() for line in f]
+        list_df = pd.DataFrame(columns=label, index = range(len(dummy_filenames)))
+        #index_time = 0
+        for i, video_block in enumerate(dummy_filenames):
             video_block_out = os.path.join(os.path.dirname(video_block), 'out_' + os.path.basename(video_block))
+            output_layer_names =('cls_head', )
             if output_layer_names:
                 results, returned_feature = inference_recognizer(
                     model,
@@ -267,6 +275,11 @@ def main():
                     args.label,
                     use_frames=args.use_frames,
                     outputs=output_layer_names)
+                ret_feature = returned_feature['cls_head'].cpu().detach().numpy()
+                #list_df = list_df.append( ret_feature, ignore_index=True )
+                #list_df = list_df.append(pd.DataFrame(ret_feature, columns=label, index= index_time)
+                list_df.iloc[i, :] = ret_feature[0,:len(label)]
+                #index_time = index_time + args.split_time
             else:
                 results = inference_recognizer(
                     model, video_block, args.label, use_frames=args.use_frames)
@@ -311,5 +324,15 @@ def main():
         #import pdb
         #pdb.set_trace()
         shutil.rmtree(tmp_path)
+        import matplotlib
+        import matplotlib.pyplot as plt
+        plt.figure()
+        list_df.plot(y=label)#, x=range(0, args.split_time*len(dummy_filenames),args.split_time)
+        fig_outdir = os.path.dirname(args.out_filename)
+        fig_outname = os.path.basename(args.out_filename)
+        fig_outname  = fig_outname.rsplit(".", 1)[0]
+        plt.savefig(os.path.join(fig_outdir,fig_outname+'.png'))
+        plt.close('all')
+        list_df.to_csv(os.path.join(fig_outdir,fig_outname+'.csv'), index=False)
 if __name__ == '__main__':
     main()

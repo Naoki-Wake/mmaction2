@@ -41,7 +41,6 @@ class HOUSEHOLDHead_NONADDLAYER(BaseHead):
                  temporal_pool=False,
                  **kwargs):
         super().__init__(num_classes, in_channels, loss_cls, **kwargs)
-        self.default_class = 174
         self.spatial_type = spatial_type
         self.dropout_ratio = dropout_ratio
         self.num_segments = num_segments
@@ -62,7 +61,7 @@ class HOUSEHOLDHead_NONADDLAYER(BaseHead):
         else:
             self.dropout = None
         
-        self.fc_cls = nn.Linear(self.in_channels, self.default_class)
+        self.fc_cls = nn.Linear(self.in_channels, self.num_classes)
 
         if self.spatial_type == 'avg':
             # use `nn.AdaptiveAvgPool2d` to adaptively match the in_channels.

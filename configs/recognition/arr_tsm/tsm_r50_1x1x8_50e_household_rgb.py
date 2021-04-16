@@ -2,8 +2,12 @@
 #    '../../_base_/models/tsm_r50.py', '../../_base_/schedules/sgd_tsm_50e.py',
 #    '../../_base_/default_runtime.py'
 #]
+#_base_ = [
+#    '../../_base_/models/household_r50.py', '../../_base_/schedules/sgd_tsm_50e.py',
+#    '../../_base_/default_runtime.py'
+#]
 _base_ = [
-    '../../_base_/models/household_r50.py', '../../_base_/schedules/sgd_tsm_50e.py',
+    '../../_base_/models/household_nonaddlayer_r50.py', '../../_base_/schedules/sgd_tsm_50e.py',
     '../../_base_/default_runtime.py'
 ]
 # model settings
