@@ -17,6 +17,8 @@ from .loading import (AudioDecode, AudioDecodeInit, AudioFeatureSelector,
                       SampleAVAFrames, SampleFrames, SampleProposalFrames,
                       UntrimmedSampleFrames)
 
+from .augmentations_mypipeline import (VideoAug, MyDebug)
+
 __all__ = [
     'SampleFrames', 'PyAVDecode', 'DecordDecode', 'DenseSampleFrames',
     'OpenCVDecode', 'FrameSelector', 'MultiGroupCrop', 'MultiScaleCrop',
@@ -31,5 +33,5 @@ __all__ = [
     'FormatAudioShape', 'LoadAudioFeature', 'AudioFeatureSelector',
     'AudioDecodeInit', 'EntityBoxFlip', 'EntityBoxCrop', 'EntityBoxRescale',
     'RandomScale', 'ImageDecode', 'BuildPseudoClip', 'RandomRescale',
-    'PyAVDecodeMotionVector', 'Rename', 'Imgaug'
+    'PyAVDecodeMotionVector', 'Rename', 'Imgaug', 'VideoAug', 'MyDebug'
 ]
