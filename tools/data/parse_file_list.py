@@ -364,7 +364,11 @@ def parse_household_splits(level):
         class_mapping = json.loads(fin.read())
 
     def line_to_map(item, test_mode=False):
-        video = item['id']
+        try:
+            video = item['id']
+        except KeyError:
+            print(item)
+            import pdb;pdb.set_trace()
         if level == 1:
             video = osp.basename(video)
         elif level == 2:
