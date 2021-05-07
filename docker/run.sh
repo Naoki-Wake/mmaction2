@@ -21,7 +21,7 @@ docker run --rm \
        -e DISPLAY=$DISPLAY \
        -e QT_X11_NO_MITSHM=1 \
        -it naoki:mmaction2_actionrecognition
-xhost +local:docker
+#xhost +local:docker
 #--volume="/mnt/hdd/video/household:/mmaction2/data/household" \
 #--volume="/home/ubuntu18/Codes/actionrecognition/mmaction2/work_dirs:/mmaction2/work_dirs" \
 #       --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \

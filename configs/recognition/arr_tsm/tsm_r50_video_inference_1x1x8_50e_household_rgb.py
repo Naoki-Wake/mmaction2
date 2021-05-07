@@ -1,6 +1,6 @@
 #_base_ = ['../../_base_/models/household_addlayer_r50.py']
 _base_ = ['../../_base_/models/household_nonaddlayer_r50.py']
-model = dict(cls_head=dict(num_classes=11))#174
+model = dict(cls_head=dict(num_classes=15))#174
 # dataset settings
 dataset_type = 'VideoDataset'
 img_norm_cfg = dict(
@@ -15,7 +15,7 @@ test_pipeline = [
         test_mode=True),
     dict(type='DecordDecode'),
     dict(type='Resize', scale=(-1, 256)),
-    dict(type='CenterCrop', crop_size=224),
+    #dict(type='CenterCrop', crop_size=224),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='FormatShape', input_format='NCHW'),
     dict(type='Collect', keys=['imgs'], meta_keys=[]),
