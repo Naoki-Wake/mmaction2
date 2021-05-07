@@ -7,7 +7,7 @@ _base_ = [
     '../../_base_/default_runtime.py'
 ]
 # model settings
-model = dict(cls_head=dict(num_classes=11))#174
+model = dict(cls_head=dict(num_classes=15))#7#11#174
 load_from = '/mmaction2/pretrained_models/tsm_r50_1x1x8_50e_sthv1_rgb_20210203-01dce462.pth'  # model path can be found in model zoo
 # dataset settings
 dataset_type = 'RawframeDataset'
@@ -16,6 +16,8 @@ data_root_val = 'data/household/rawframes'
 ann_file_train = 'data/household/household_train_list_rawframes.txt'
 ann_file_val = 'data/household/household_val_list_rawframes.txt'
 ann_file_test = 'data/household/household_test_list_rawframes.txt'
+#ann_file_test = 'data/household/household_val_list_rawframes.txt'
+#ann_file_test = 'data/household/household_val_list_rawframes.txt'
 #ann_file_train = 'data/household/annotations_ignorelaterality/bac_configtexts/household_train_list_rawframes.txt'
 #ann_file_val = 'data/household/annotations_ignorelaterality/bac_configtexts/household_val_list_rawframes.txt'
 #ann_file_test = 'data/household/annotations_ignorelaterality/bac_configtexts/household_test_list_rawframes.txt'
@@ -24,16 +26,19 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='SampleFrames', clip_len=1, frame_interval=1, num_clips=8),
     dict(type='RawFrameDecode'),
-    dict(type='Resize', scale=(-1, 256)),
-    dict(
-        type='MultiScaleCrop',
-        input_size=224,
-        scales=(1, 0.875, 0.75, 0.66),
-        random_crop=False,
-        max_wh_scale_gap=1,
-        num_fixed_crops=13),
+    dict(type='VideoAug'),       # use a custom pipeline
+    #dict(type='Resize', scale=(-1, 256)),
+    #dict(
+    #    type='MultiScaleCrop',
+    #    input_size=224,
+    #    scales=(1, 0.875, 0.75, 0.66),
+    #    random_crop=False,
+    #    max_wh_scale_gap=1,
+    #    num_fixed_crops=13),
     dict(type='Resize', scale=(224, 224), keep_ratio=False),
+    #dict(type='MyDebug'),       # use a custom pipeline
     dict(type='Normalize', **img_norm_cfg),
+    #dict(type='MyDebug'),       # use a custom pipeline
     dict(type='FormatShape', input_format='NCHW'),
     dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['imgs', 'label'])
@@ -46,8 +51,9 @@ val_pipeline = [
         num_clips=8,
         test_mode=True),
     dict(type='RawFrameDecode'),
-    dict(type='Resize', scale=(-1, 256)),
-    dict(type='CenterCrop', crop_size=224),
+    #dict(type='Resize', scale=(-1, 256)),
+    #dict(type='CenterCrop', crop_size=224),
+    dict(type='Resize', scale=(224, 224), keep_ratio=False),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='FormatShape', input_format='NCHW'),
     dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
@@ -61,8 +67,9 @@ test_pipeline = [
         num_clips=8,
         test_mode=True),
     dict(type='RawFrameDecode'),
-    dict(type='Resize', scale=(-1, 256)),
-    dict(type='CenterCrop', crop_size=224),
+    #dict(type='Resize', scale=(-1, 256)),
+    #dict(type='CenterCrop', crop_size=224),
+    dict(type='Resize', scale=(224, 224), keep_ratio=False),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='FormatShape', input_format='NCHW'),
     dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
@@ -95,4 +102,7 @@ optimizer = dict(
     weight_decay=0.0005)
 
 # runtime settings
-work_dir = './work_dirs/experiment20210419/tsm_r50_1x1x8_50e_household_rgb_usepretrain_nonaddlayer_ignorelaterality/'
+#work_dir = './work_dirs/experiment20210422/debug/'
+work_dir = './work_dirs/experiment20210428_with_handcrop/tsm_r50_1x1x8_50e_household_rgb_usepretrain_nonaddlayer_ignorelaterality/'
+#work_dir = './work_dirs/experiment20210421/tsm_r50_1x1x8_50e_household_rgb_usepretrain_nonaddlayer_ignorelaterality/'
+#work_dir = './work_dirs/experiment20210420/tsm_r50_1x1x8_50e_household_rgb_usepretrain_nonaddlayer_ignorelaterality/'

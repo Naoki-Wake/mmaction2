@@ -1,6 +1,6 @@
 #_base_ = ['../../_base_/models/household_addlayer_r50.py']
 _base_ = ['../../_base_/models/household_nonaddlayer_r50.py']
-model = dict(cls_head=dict(num_classes=15))#174
+model = dict(cls_head=dict(num_classes=11))#174
 # dataset settings
 dataset_type = 'VideoDataset'
 img_norm_cfg = dict(
