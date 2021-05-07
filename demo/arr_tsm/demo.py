@@ -278,6 +278,7 @@ def main():
                 ret_feature = returned_feature['cls_head'].cpu().detach().numpy()
                 #list_df = list_df.append( ret_feature, ignore_index=True )
                 #list_df = list_df.append(pd.DataFrame(ret_feature, columns=label, index= index_time)
+                #import pdb;pdb.set_trace()
                 list_df.iloc[i, :] = ret_feature[0,:len(label)]
                 #index_time = index_time + args.split_time
             else:

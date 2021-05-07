@@ -31,3 +31,4 @@ RUN pip install --no-cache-dir -e .
 RUN apt-get update && apt-get install -y imagemagick
 RUN pip install decord
 RUN pip install moviepy==1.0.3
+RUN pip install scikit-image
