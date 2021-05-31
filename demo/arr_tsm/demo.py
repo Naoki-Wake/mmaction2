@@ -278,7 +278,32 @@ def main():
                 ret_feature = returned_feature['cls_head'].cpu().detach().numpy()
                 #list_df = list_df.append( ret_feature, ignore_index=True )
                 #list_df = list_df.append(pd.DataFrame(ret_feature, columns=label, index= index_time)
-                #import pdb;pdb.set_trace()
+                '''from prettytable import PrettyTable
+
+                def count_parameters(model):
+                    table = PrettyTable(["Modules", "Parameters"])
+                    total_params = 0
+                    for name, parameter in model.named_parameters():
+                        if not parameter.requires_grad: continue
+                        print(parameter.requires_grad)
+                        param = parameter.numel()
+                        table.add_row([name, param])
+                        total_params+=param
+                    print(table)
+                    print(f"Total Trainable Params: {total_params}")
+                    return total_params
+
+                def fix_parameters(model):
+                    table = PrettyTable(["Modules", "Parameters"])
+                    total_params = 0
+                    for name, parameter in model.named_parameters():
+                        if not parameter.requires_grad: continue
+                        if not 'cls_head' in name:
+                            parameter.requires_grad = False
+                count_parameters(model)
+                fix_parameters(model)                        
+                count_parameters(model)
+                import pdb;pdb.set_trace()'''
                 list_df.iloc[i, :] = ret_feature[0,:len(label)]
                 #index_time = index_time + args.split_time
             else:
@@ -300,7 +325,6 @@ def main():
                 label_show = ''
                 for result in results:
                     label_show = label_show + result[0]+ ': {:.2g}'.format(result[1]) + '\n'
-
                 get_output(
                     video_path=video_block,
                     out_filename=video_block_out,
@@ -329,6 +353,9 @@ def main():
         import matplotlib.pyplot as plt
         plt.figure()
         list_df.plot(y=label)#, x=range(0, args.split_time*len(dummy_filenames),args.split_time)
+        plt.legend(loc='upper left', bbox_to_anchor=(1.0, 1))
+        plt.subplots_adjust(right=0.7)
+        plt.grid()
         fig_outdir = os.path.dirname(args.out_filename)
         fig_outname = os.path.basename(args.out_filename)
         fig_outname  = fig_outname.rsplit(".", 1)[0]

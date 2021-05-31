@@ -256,7 +256,9 @@ class RandomAugmentation(object):
 
 @PIPELINES.register_module()
 class VideoAug:
-    def __init__(self):
+    def __init__(self, degrees = 30, prob = 0.01):
+        self.degrees = degrees
+        self.prob = prob
         #self.count = 10
         pass
     def __call__(self, results):
@@ -273,7 +275,8 @@ class VideoAug:
         print("/mmaction2/data/demo/" + os.path.basename(results['frame_dir']) + ".jpg")"""
         #if 'aug' not in results['frame_dir']:
             #print('hoge')
-        ra = RandomAugmentation(30)
+        #ra = RandomAugmentation(30)
+        ra = RandomAugmentation(self.degrees, prob = self.prob)
         for i, frame in enumerate(results['imgs']):
             results['imgs'][i] = ra(frame)
             #im = Image.fromarray(results['imgs'][0])
@@ -293,19 +296,23 @@ class VideoAug:
 
 @PIPELINES.register_module()
 class MyDebug:
-    def __init__(self):
+    def __init__(self, note = ''):
         self.count = 0
+        self.note = note
     def __call__(self, results):
-        """if self.count < 1:
+        if self.count < 5:
             #print(len(results['imgs']))
             print(np.shape(results['imgs'][0]))
-            frame_rate = 30.0 # フレームレート
+            print(np.shape(results['imgs']))
+            '''frame_rate = 30.0 # フレームレート
             size = (224, 224) # 動画の画面サイズ
             fmt = cv2.VideoWriter_fourcc('m', 'p', '4', 'v') # ファイル形式(ここではmp4)
-            writer = cv2.VideoWriter("/mmaction2/data/demo/" + os.path.basename(results['frame_dir']) + "_resize.mp4", fmt, frame_rate, size) # ライター作成
+            writer = cv2.VideoWriter("/mmaction2/data/demo/20210521/" + os.path.basename(results['frame_dir']) + "_resize.mp4", fmt, frame_rate, size) # ライター作成
             for frame in results['imgs']:
                 writer.write(frame) # 画像を1フレーム分として書き込み
-            writer.release() # ファイルを閉じる"""
+            writer.release() # ファイルを閉じる'''
+            print(results['imgs'][0][1][1][1])
+            cv2.imwrite("/mmaction2/data/demo/20210522/" + os.path.basename(results['frame_dir']) + "_" + self.note + ".jpg", results['imgs'][0])
         self.count = self.count + 1
         print('debug:'+str(self.count))
         return results

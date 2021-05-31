@@ -7,7 +7,7 @@ _base_ = [
     '../../_base_/default_runtime.py'
 ]
 # model settings
-model = dict(cls_head=dict(num_classes=14))#7#11#174
+model = dict(cls_head=dict(num_classes=4))#7#11#174
 load_from = '/mmaction2/pretrained_models/tsm_r50_1x1x8_50e_sthv1_rgb_20210203-01dce462.pth'  # model path can be found in model zoo
 # dataset settings
 dataset_type = 'RawframeDataset'
