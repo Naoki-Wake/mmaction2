@@ -50,7 +50,7 @@ def parse_args():
     parser.add_argument(
         '--split-time',
         default=None,
-        type=int,
+        type=float,
         help='split a video into windows, then apply the recognition, then concatnate the results. Split or chunk size in seconds, for example 10')
     parser.add_argument('--out-filename', default=None, help='output filename')
     args = parser.parse_args()

@@ -7,7 +7,7 @@ _base_ = [
     '../../_base_/default_runtime.py'
 ]
 # model settings
-model = dict(cls_head=dict(num_classes=4))#7#11#174
+model = dict(cls_head=dict(num_classes=9))#7#11#174
 load_from = '/mmaction2/pretrained_models/tsm_r50_1x1x8_50e_sthv1_rgb_20210203-01dce462.pth'  # model path can be found in model zoo
 # dataset settings
 dataset_type = 'RawframeDataset'
@@ -15,8 +15,8 @@ data_root = 'data/household/rawframes'
 data_root_val = 'data/household/rawframes'
 ann_file_train = 'data/household/household_train_list_rawframes.txt'
 ann_file_val = 'data/household/household_val_list_rawframes.txt'
-#ann_file_test = 'data/household/household_test_list_rawframes.txt'
-ann_file_test = 'data/household/household_val_list_rawframes.txt'
+ann_file_test = 'data/household/household_test_list_rawframes.txt'
+#ann_file_test = 'data/household/household_val_list_rawframes.txt'
 
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
