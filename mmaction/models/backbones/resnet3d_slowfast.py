@@ -1,3 +1,6 @@
+# Copyright (c) OpenMMLab. All rights reserved.
+import warnings
+
 import torch
 import torch.nn as nn
 from mmcv.cnn import ConvModule, kaiming_init
@@ -5,7 +8,7 @@ from mmcv.runner import _load_checkpoint, load_checkpoint
 from mmcv.utils import print_log
 
 from ...utils import get_root_logger
-from ..registry import BACKBONES
+from ..builder import BACKBONES
 from .resnet3d import ResNet3d
 
 try:
@@ -36,11 +39,13 @@ class ResNet3dPathway(ResNet3d):
     def __init__(self,
                  *args,
                  lateral=False,
+                 lateral_norm=False,
                  speed_ratio=8,
                  channel_ratio=8,
                  fusion_kernel=5,
                  **kwargs):
         self.lateral = lateral
+        self.lateral_norm = lateral_norm
         self.speed_ratio = speed_ratio
         self.channel_ratio = channel_ratio
         self.fusion_kernel = fusion_kernel
@@ -58,8 +63,8 @@ class ResNet3dPathway(ResNet3d):
                 padding=((fusion_kernel - 1) // 2, 0, 0),
                 bias=False,
                 conv_cfg=self.conv_cfg,
-                norm_cfg=None,
-                act_cfg=None)
+                norm_cfg=self.norm_cfg if self.lateral_norm else None,
+                act_cfg=self.act_cfg if self.lateral_norm else None)
 
         self.lateral_connections = []
         for i in range(len(self.stage_blocks)):
@@ -79,8 +84,8 @@ class ResNet3dPathway(ResNet3d):
                         padding=((fusion_kernel - 1) // 2, 0, 0),
                         bias=False,
                         conv_cfg=self.conv_cfg,
-                        norm_cfg=None,
-                        act_cfg=None))
+                        norm_cfg=self.norm_cfg if self.lateral_norm else None,
+                        act_cfg=self.act_cfg if self.lateral_norm else None))
                 self.lateral_connections.append(lateral_name)
 
     def make_res_layer(self,
@@ -120,7 +125,7 @@ class ResNet3dPathway(ResNet3d):
                 Default: ``pytorch``.
             inflate (int | Sequence[int]): Determine whether to inflate
                 for each block. Default: 1.
-            inflate_style (str): ``3x1x1`` or ``1x1x1``. which determines
+            inflate_style (str): ``3x1x1`` or ``3x3x3``. which determines
                 the kernel sizes and padding strides for conv1 and
                 conv2 in each block. Default: ``3x1x1``.
             non_local (int | Sequence[int]): Determine whether to apply
@@ -212,7 +217,7 @@ class ResNet3dPathway(ResNet3d):
 
         Args:
             logger (logging.Logger): The logger used to print
-                debugging infomation.
+                debugging information.
         """
 
         state_dict_r2d = _load_checkpoint(self.pretrained)
@@ -280,7 +285,12 @@ class ResNet3dPathway(ResNet3d):
         old_shape = conv2d_weight.shape
         new_shape = conv3d.weight.data.shape
         kernel_t = new_shape[2]
+
         if new_shape[1] != old_shape[1]:
+            if new_shape[1] < old_shape[1]:
+                warnings.warn(f'The parameter of {module_name_2d} is not'
+                              'loaded due to incompatible shapes. ')
+                return
             # Inplanes may be different due to lateral connections
             new_channels = new_shape[1] - old_shape[1]
             pad_shape = old_shape
@@ -291,6 +301,7 @@ class ResNet3dPathway(ResNet3d):
                  torch.zeros(pad_shape).type_as(conv2d_weight).to(
                      conv2d_weight.device)),
                 dim=1)
+
         new_weight = conv2d_weight.data.unsqueeze(2).expand_as(
             conv3d.weight) / kernel_t
         conv3d.weight.data.copy_(new_weight)
@@ -463,7 +474,7 @@ class ResNet3dSlowFast(nn.Module):
             # Directly load 3D model.
             load_checkpoint(self, self.pretrained, strict=True, logger=logger)
         elif self.pretrained is None:
-            # Init two branch seperately.
+            # Init two branch separately.
             self.fast_path.init_weights()
             self.slow_path.init_weights()
         else:

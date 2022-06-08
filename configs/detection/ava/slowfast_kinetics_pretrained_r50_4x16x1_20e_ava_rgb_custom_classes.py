@@ -62,7 +62,7 @@ model = dict(
                 add_gt_as_proposals=True),
             pos_weight=1.0,
             debug=False)),
-    test_cfg=dict(rcnn=dict(action_thr=0.00)))
+    test_cfg=dict(rcnn=dict(action_thr=0.002)))
 
 dataset_type = 'AVADataset'
 data_root = 'data/ava/rawframes'
@@ -106,7 +106,8 @@ train_pipeline = [
 ]
 # The testing is w/o. any cropping / flipping
 val_pipeline = [
-    dict(type='SampleAVAFrames', clip_len=32, frame_interval=2),
+    dict(
+        type='SampleAVAFrames', clip_len=32, frame_interval=2, test_mode=True),
     dict(type='RawFrameDecode'),
     dict(type='Resize', scale=(-1, 256)),
     dict(type='Normalize', **img_norm_cfg),
@@ -124,7 +125,7 @@ val_pipeline = [
 
 data = dict(
     videos_per_gpu=9,
-    workers_per_gpu=4,
+    workers_per_gpu=2,
     val_dataloader=dict(videos_per_gpu=1),
     test_dataloader=dict(videos_per_gpu=1),
     train=dict(

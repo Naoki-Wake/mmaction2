@@ -1,17 +1,9 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch
 import torch.nn as nn
 
-from mmaction.utils import import_module_error_func
-from ..registry import BACKBONES
+from ..builder import BACKBONES
 from .resnet_tsm import ResNetTSM
-
-try:
-    from mmcv.ops import tin_shift
-except (ImportError, ModuleNotFoundError):
-
-    @import_module_error_func('mmcv-full')
-    def tin_shift(*args, **kwargs):
-        pass
 
 
 def linear_sampler(data, offset):
@@ -37,6 +29,13 @@ def linear_sampler(data, offset):
 
     # data, data0, data1: [N, num_segments, C, H * W]
     data = data.view(n, t, c, h * w).contiguous()
+
+    try:
+        from mmcv.ops import tin_shift
+    except (ImportError, ModuleNotFoundError):
+        raise ImportError('Failed to import `tin_shift` from `mmcv.ops`. You '
+                          'will be unable to use TIN. ')
+
     data0 = tin_shift(data, offset0)
     data1 = tin_shift(data, offset1)
 

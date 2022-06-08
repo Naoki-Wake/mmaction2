@@ -1,4 +1,5 @@
-from ..registry import BACKBONES
+# Copyright (c) OpenMMLab. All rights reserved.
+from ..builder import BACKBONES
 from .resnet3d_slowfast import ResNet3dPathway
 
 try:

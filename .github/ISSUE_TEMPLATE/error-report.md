@@ -4,7 +4,6 @@ about: Create a report to help us improve
 title: ''
 labels: ''
 assignees: ''
-
 ---
 
 Thanks for your error report and we appreciate it a lot.
@@ -16,6 +15,7 @@ If you feel we have help you, give us a STAR! :satisfied:
 2. The bug has not been fixed in the latest version.
 
 **Describe the bug**
+
 A clear and concise description of what the bug is.
 
 **Reproduction**
@@ -33,8 +33,8 @@ A placeholder for the command.
 
 1. Please run `PYTHONPATH=${PWD}:$PYTHONPATH python mmaction/utils/collect_env.py` to collect necessary environment information and paste it here.
 2. You may add addition that may be helpful for locating the problem, such as
-    - How you installed PyTorch [e.g., pip, conda, source]
-    - Other environment variables that may be related (such as `$PATH`, `$LD_LIBRARY_PATH`, `$PYTHONPATH`, etc.)
+   - How you installed PyTorch \[e.g., pip, conda, source\]
+   - Other environment variables that may be related (such as `$PATH`, `$LD_LIBRARY_PATH`, `$PYTHONPATH`, etc.)
 
 **Error traceback**
 

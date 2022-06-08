@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import os.path as osp
 
 import mmcv
@@ -39,13 +40,13 @@ def generate_recognizer_demo_inputs(
             Default:'2D'
     """
     if len(input_shape) == 5:
-        (N, L, C, H, W) = input_shape
+        (N, L, _, _, _) = input_shape
     elif len(input_shape) == 6:
-        (N, M, C, L, H, W) = input_shape
+        (N, M, _, L, _, _) = input_shape
 
     imgs = np.random.random(input_shape)
 
-    if model_type == '2D':
+    if model_type == '2D' or model_type == 'skeleton':
         gt_labels = torch.LongTensor([2] * N)
     elif model_type == '3D':
         gt_labels = torch.LongTensor([2] * M)
@@ -98,8 +99,8 @@ def generate_detector_demo_inputs(
             gt_bboxes=gt_bboxes,
             gt_labels=gt_labels,
             img_metas=img_metas)
-    else:
-        return dict(img=[img], proposals=[proposals], img_metas=[img_metas])
+
+    return dict(img=[img], proposals=[proposals], img_metas=[img_metas])
 
 
 def generate_gradcam_inputs(input_shape=(1, 3, 3, 224, 224), model_type='2D'):
@@ -134,7 +135,7 @@ def get_cfg(config_type, fname):
     influencing other tests.
     """
     config_types = ('recognition', 'recognition_audio', 'localization',
-                    'detection')
+                    'detection', 'skeleton')
     assert config_type in config_types
 
     repo_dpath = osp.dirname(osp.dirname(osp.dirname(__file__)))
@@ -160,3 +161,7 @@ def get_localizer_cfg(fname):
 
 def get_detector_cfg(fname):
     return get_cfg('detection', fname)
+
+
+def get_skeletongcn_cfg(fname):
+    return get_cfg('skeleton', fname)

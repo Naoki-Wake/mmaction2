@@ -1,9 +1,9 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import os.path as osp
 
-from tools.data.parse_file_list import parse_directory
-
 from mmaction.localization import load_localize_proposal_file
+from tools.data.parse_file_list import parse_directory
 
 
 def process_norm_proposal_file(norm_proposal_file, frame_dict):

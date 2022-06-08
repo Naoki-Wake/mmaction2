@@ -1,20 +1,7 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch
 import torch.nn as nn
-
-from mmaction.utils import import_module_error_class
-
-try:
-    from mmcv.ops import RoIAlign, RoIPool
-except (ImportError, ModuleNotFoundError):
-
-    @import_module_error_class('mmcv-full')
-    class RoIAlign(nn.Module):
-        pass
-
-    @import_module_error_class('mmcv-full')
-    class RoIPool(nn.Module):
-        pass
-
+import torch.nn.functional as F
 
 try:
     from mmdet.models import ROI_EXTRACTORS
@@ -55,6 +42,7 @@ class SingleRoIExtractor3D(nn.Module):
                  pool_mode='avg',
                  aligned=True,
                  with_temporal_pool=True,
+                 temporal_pool_mode='avg',
                  with_global=False):
         super().__init__()
         self.roi_layer_type = roi_layer_type
@@ -68,7 +56,16 @@ class SingleRoIExtractor3D(nn.Module):
         self.aligned = aligned
 
         self.with_temporal_pool = with_temporal_pool
+        self.temporal_pool_mode = temporal_pool_mode
+
         self.with_global = with_global
+
+        try:
+            from mmcv.ops import RoIAlign, RoIPool
+        except (ImportError, ModuleNotFoundError):
+            raise ImportError('Failed to import `RoIAlign` and `RoIPool` from '
+                              '`mmcv.ops`. The two modules will be used in '
+                              '`SingleRoIExtractor3D`! ')
 
         if self.roi_layer_type == 'RoIPool':
             self.roi_layer = RoIPool(self.output_size, self.spatial_scale)
@@ -88,11 +85,22 @@ class SingleRoIExtractor3D(nn.Module):
     def forward(self, feat, rois):
         if not isinstance(feat, tuple):
             feat = (feat, )
+
         if len(feat) >= 2:
-            assert self.with_temporal_pool
+            maxT = max([x.shape[2] for x in feat])
+            max_shape = (maxT, ) + feat[0].shape[3:]
+            # resize each feat to the largest shape (w. nearest)
+            feat = [F.interpolate(x, max_shape).contiguous() for x in feat]
+
         if self.with_temporal_pool:
-            feat = [torch.mean(x, 2, keepdim=True) for x in feat]
-        feat = torch.cat(feat, axis=1)
+            if self.temporal_pool_mode == 'avg':
+                feat = [torch.mean(x, 2, keepdim=True) for x in feat]
+            elif self.temporal_pool_mode == 'max':
+                feat = [torch.max(x, 2, keepdim=True)[0] for x in feat]
+            else:
+                raise NotImplementedError
+
+        feat = torch.cat(feat, axis=1).contiguous()
 
         roi_feats = []
         for t in range(feat.size(2)):
@@ -106,7 +114,7 @@ class SingleRoIExtractor3D(nn.Module):
                 roi_feat = roi_feat.contiguous()
             roi_feats.append(roi_feat)
 
-        return torch.stack(roi_feats, dim=2)
+        return torch.stack(roi_feats, dim=2), feat
 
 
 if mmdet_imported:

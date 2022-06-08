@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import copy
 
 import pytest
@@ -5,9 +6,10 @@ import torch
 import torch.nn as nn
 from mmcv.utils import _BatchNorm
 
-from mmaction.models import (C3D, X3D, MobileNetV2TSM, ResNet2Plus1d,
+from mmaction.models import (C3D, STGCN, X3D, MobileNetV2TSM, ResNet2Plus1d,
                              ResNet3dCSN, ResNet3dSlowFast, ResNet3dSlowOnly,
-                             ResNetAudio, ResNetTIN, ResNetTSM, TANet)
+                             ResNetAudio, ResNetTIN, ResNetTSM, TANet,
+                             TimeSformer)
 from mmaction.models.backbones.resnet_tsm import NL3DWrapper
 from .base import check_norm_state, generate_backbone_demo_inputs
 
@@ -324,9 +326,10 @@ def test_resnet_tsm_backbone():
 
 def test_mobilenetv2_tsm_backbone():
     """Test mobilenetv2_tsm backbone."""
-    from mmaction.models.backbones.resnet_tsm import TemporalShift
-    from mmaction.models.backbones.mobilenet_v2 import InvertedResidual
     from mmcv.cnn import ConvModule
+
+    from mmaction.models.backbones.mobilenet_v2 import InvertedResidual
+    from mmaction.models.backbones.resnet_tsm import TemporalShift
 
     input_shape = (8, 3, 64, 64)
     imgs = generate_backbone_demo_inputs(input_shape)
@@ -485,6 +488,24 @@ def test_slowonly_backbone():
         # SlowOnly should contain no lateral connection
         ResNet3dSlowOnly(50, None, lateral=True)
 
+    # test SlowOnly for PoseC3D
+    so_50 = ResNet3dSlowOnly(
+        depth=50,
+        pretrained=None,
+        in_channels=17,
+        base_channels=32,
+        num_stages=3,
+        out_indices=(2, ),
+        stage_blocks=(4, 6, 3),
+        conv1_stride_s=1,
+        pool1_stride_s=1,
+        inflate=(0, 1, 1),
+        spatial_strides=(2, 2, 2),
+        temporal_strides=(1, 1, 2),
+        dilations=(1, 1, 1))
+    so_50.init_weights()
+    so_50.train()
+
     # test SlowOnly with normal config
     so_50 = ResNet3dSlowOnly(50, None)
     so_50.init_weights()
@@ -607,20 +628,82 @@ def test_tanet_backbone():
     assert feat.shape == torch.Size([16, 2048, 1, 1])
 
 
+def test_timesformer_backbone():
+    input_shape = (1, 3, 8, 64, 64)
+    imgs = generate_backbone_demo_inputs(input_shape)
+
+    # divided_space_time
+    timesformer = TimeSformer(
+        8, 64, 16, embed_dims=768, attention_type='divided_space_time')
+    timesformer.init_weights()
+    from mmaction.models.common import (DividedSpatialAttentionWithNorm,
+                                        DividedTemporalAttentionWithNorm,
+                                        FFNWithNorm)
+    assert isinstance(timesformer.transformer_layers.layers[0].attentions[0],
+                      DividedTemporalAttentionWithNorm)
+    assert isinstance(timesformer.transformer_layers.layers[11].attentions[1],
+                      DividedSpatialAttentionWithNorm)
+    assert isinstance(timesformer.transformer_layers.layers[0].ffns[0],
+                      FFNWithNorm)
+    assert hasattr(timesformer, 'time_embed')
+    assert timesformer.patch_embed.num_patches == 16
+
+    cls_tokens = timesformer(imgs)
+    assert cls_tokens.shape == torch.Size([1, 768])
+
+    # space_only
+    timesformer = TimeSformer(
+        8, 64, 16, embed_dims=512, num_heads=8, attention_type='space_only')
+    timesformer.init_weights()
+
+    assert not hasattr(timesformer, 'time_embed')
+    assert timesformer.patch_embed.num_patches == 16
+
+    cls_tokens = timesformer(imgs)
+    assert cls_tokens.shape == torch.Size([1, 512])
+
+    # joint_space_time
+    input_shape = (1, 3, 2, 64, 64)
+    imgs = generate_backbone_demo_inputs(input_shape)
+    timesformer = TimeSformer(
+        2,
+        64,
+        8,
+        embed_dims=256,
+        num_heads=8,
+        attention_type='joint_space_time')
+    timesformer.init_weights()
+
+    assert hasattr(timesformer, 'time_embed')
+    assert timesformer.patch_embed.num_patches == 64
+
+    cls_tokens = timesformer(imgs)
+    assert cls_tokens.shape == torch.Size([1, 256])
+
+    with pytest.raises(AssertionError):
+        # unsupported attention type
+        timesformer = TimeSformer(
+            8, 64, 16, attention_type='wrong_attention_type')
+
+    with pytest.raises(AssertionError):
+        # Wrong transformer_layers type
+        timesformer = TimeSformer(8, 64, 16, transformer_layers='wrong_type')
+
+
 def test_c3d_backbone():
     """Test c3d backbone."""
-    input_shape = (1, 3, 16, 112, 112)
+    input_shape = (1, 3, 16, 24, 24)
     imgs = generate_backbone_demo_inputs(input_shape)
 
     # c3d inference test
-    c3d = C3D()
+    c3d = C3D(out_dim=512)
     c3d.init_weights()
     c3d.train()
     feat = c3d(imgs)
     assert feat.shape == torch.Size([1, 4096])
 
     # c3d with bn inference test
-    c3d_bn = C3D(norm_cfg=dict(type='BN3d'))
+    c3d_bn = C3D(out_dim=512, norm_cfg=dict(type='BN3d'))
     c3d_bn.init_weights()
     c3d_bn.train()
     feat = c3d_bn(imgs)
@@ -687,3 +770,162 @@ def test_resnet_tin_backbone():
     # resnet_tin with normal cfg inference
     feat = resnet_tin(imgs)
     assert feat.shape == torch.Size([8, 2048, 2, 2])
+
+
+def test_stgcn_backbone():
+    """Test STGCN backbone."""
+    # test coco layout, spatial strategy
+    input_shape = (1, 3, 300, 17, 2)
+    skeletons = generate_backbone_demo_inputs(input_shape)
+
+    stgcn = STGCN(
+        in_channels=3,
+        edge_importance_weighting=True,
+        graph_cfg=dict(layout='coco', strategy='spatial'))
+    stgcn.init_weights()
+    stgcn.train()
+    feat = stgcn(skeletons)
+    assert feat.shape == torch.Size([2, 256, 75, 17])
+
+    # test openpose-18 layout, spatial strategy
+    input_shape = (1, 3, 300, 18, 2)
+    skeletons = generate_backbone_demo_inputs(input_shape)
+
+    stgcn = STGCN(
+        in_channels=3,
+        edge_importance_weighting=True,
+        graph_cfg=dict(layout='openpose-18', strategy='spatial'))
+    stgcn.init_weights()
+    stgcn.train()
+    feat = stgcn(skeletons)
+    assert feat.shape == torch.Size([2, 256, 75, 18])
+
+    # test ntu-rgb+d layout, spatial strategy
+    input_shape = (1, 3, 300, 25, 2)
+    skeletons = generate_backbone_demo_inputs(input_shape)
+
+    stgcn = STGCN(
+        in_channels=3,
+        edge_importance_weighting=True,
+        graph_cfg=dict(layout='ntu-rgb+d', strategy='spatial'))
+    stgcn.init_weights()
+    stgcn.train()
+    feat = stgcn(skeletons)
+    assert feat.shape == torch.Size([2, 256, 75, 25])
+
+    # test ntu_edge layout, spatial strategy
+    input_shape = (1, 3, 300, 24, 2)
+    skeletons = generate_backbone_demo_inputs(input_shape)
+
+    stgcn = STGCN(
+        in_channels=3,
+        edge_importance_weighting=True,
+        graph_cfg=dict(layout='ntu_edge', strategy='spatial'))
+    stgcn.init_weights()
+    stgcn.train()
+    feat = stgcn(skeletons)
+    assert feat.shape == torch.Size([2, 256, 75, 24])
+
+    # test coco layout, uniform strategy
+    input_shape = (1, 3, 300, 17, 2)
+    skeletons = generate_backbone_demo_inputs(input_shape)
+
+    stgcn = STGCN(
+        in_channels=3,
+        edge_importance_weighting=True,
+        graph_cfg=dict(layout='coco', strategy='uniform'))
+    stgcn.init_weights()
+    stgcn.train()
+    feat = stgcn(skeletons)
+    assert feat.shape == torch.Size([2, 256, 75, 17])
+
+    # test openpose-18 layout, uniform strategy
+    input_shape = (1, 3, 300, 18, 2)
+    skeletons = generate_backbone_demo_inputs(input_shape)
+
+    stgcn = STGCN(
+        in_channels=3,
+        edge_importance_weighting=True,
+        graph_cfg=dict(layout='openpose-18', strategy='uniform'))
+    stgcn.init_weights()
+    stgcn.train()
+    feat = stgcn(skeletons)
+    assert feat.shape == torch.Size([2, 256, 75, 18])
+
+    # test ntu-rgb+d layout, uniform strategy
+    input_shape = (1, 3, 300, 25, 2)
+    skeletons = generate_backbone_demo_inputs(input_shape)
+
+    stgcn = STGCN(
+        in_channels=3,
+        edge_importance_weighting=True,
+        graph_cfg=dict(layout='ntu-rgb+d', strategy='uniform'))
+    stgcn.init_weights()
+    stgcn.train()
+    feat = stgcn(skeletons)
+    assert feat.shape == torch.Size([2, 256, 75, 25])
+
+    # test ntu_edge layout, uniform strategy
+    input_shape = (1, 3, 300, 24, 2)
+    skeletons = generate_backbone_demo_inputs(input_shape)
+
+    stgcn = STGCN(
+        in_channels=3,
+        edge_importance_weighting=True,
+        graph_cfg=dict(layout='ntu_edge', strategy='uniform'))
+    stgcn.init_weights()
+    stgcn.train()
+    feat = stgcn(skeletons)
+    assert feat.shape == torch.Size([2, 256, 75, 24])
+
+    # test coco layout, distance strategy
+    input_shape = (1, 3, 300, 17, 2)
+    skeletons = generate_backbone_demo_inputs(input_shape)
+
+    stgcn = STGCN(
+        in_channels=3,
+        edge_importance_weighting=True,
+        graph_cfg=dict(layout='coco', strategy='distance'))
+    stgcn.init_weights()
+    stgcn.train()
+    feat = stgcn(skeletons)
+    assert feat.shape == torch.Size([2, 256, 75, 17])
+
+    # test openpose-18 layout, distance strategy
+    input_shape = (1, 3, 300, 18, 2)
+    skeletons = generate_backbone_demo_inputs(input_shape)
+
+    stgcn = STGCN(
+        in_channels=3,
+        edge_importance_weighting=True,
+        graph_cfg=dict(layout='openpose-18', strategy='distance'))
+    stgcn.init_weights()
+    stgcn.train()
+    feat = stgcn(skeletons)
+    assert feat.shape == torch.Size([2, 256, 75, 18])
+
+    # test ntu-rgb+d layout, distance strategy
+    input_shape = (1, 3, 300, 25, 2)
+    skeletons = generate_backbone_demo_inputs(input_shape)
+
+    stgcn = STGCN(
+        in_channels=3,
+        edge_importance_weighting=True,
+        graph_cfg=dict(layout='ntu-rgb+d', strategy='distance'))
+    stgcn.init_weights()
+    stgcn.train()
+    feat = stgcn(skeletons)
+    assert feat.shape == torch.Size([2, 256, 75, 25])
+
+    # test ntu_edge layout, distance strategy
+    input_shape = (1, 3, 300, 24, 2)
+    skeletons = generate_backbone_demo_inputs(input_shape)
+
+    stgcn = STGCN(
+        in_channels=3,
+        edge_importance_weighting=True,
+        graph_cfg=dict(layout='ntu_edge', strategy='distance'))
+    stgcn.init_weights()
+    stgcn.train()
+    feat = stgcn(skeletons)
+    assert feat.shape == torch.Size([2, 256, 75, 24])

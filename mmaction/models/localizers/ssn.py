@@ -1,13 +1,14 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch
 import torch.nn as nn
 
 from .. import builder
-from ..registry import LOCALIZERS
-from .base import BaseLocalizer
+from ..builder import LOCALIZERS
+from .base import BaseTAGClassifier
 
 
 @LOCALIZERS.register_module()
-class SSN(BaseLocalizer):
+class SSN(BaseTAGClassifier):
     """Temporal Action Detection with Structured Segment Networks.
 
     Args:
@@ -113,6 +114,7 @@ class SSN(BaseLocalizer):
         relative_proposal_list = relative_proposal_list.cpu().numpy()
         activity_scores = activity_scores.cpu().numpy()
         completeness_scores = completeness_scores.cpu().numpy()
+        reg_norm_consts = reg_norm_consts.cpu().numpy()
         if bbox_preds is not None:
             bbox_preds = bbox_preds.view(-1, self.cls_head.num_classes, 2)
             bbox_preds[:, :, 0] = (

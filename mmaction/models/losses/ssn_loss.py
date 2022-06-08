@@ -1,8 +1,9 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..registry import LOSSES
+from ..builder import LOSSES
 from .ohem_hinge_loss import OHEMHingeLoss
 
 

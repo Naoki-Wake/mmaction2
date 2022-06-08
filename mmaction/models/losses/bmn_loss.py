@@ -1,8 +1,9 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..registry import LOSSES
+from ..builder import LOSSES
 from .binary_logistic_regression_loss import binary_logistic_regression_loss
 
 
@@ -61,7 +62,7 @@ class BMNLoss(nn.Module):
                 temporal_iou. Default: 0.3.
 
         Returns:
-            torch.Tensor: Proposal evalutaion regression loss.
+            torch.Tensor: Proposal evaluation regression loss.
         """
         u_hmask = (gt_iou_map > high_temporal_iou_threshold).float()
         u_mmask = ((gt_iou_map <= high_temporal_iou_threshold) &
@@ -112,7 +113,7 @@ class BMNLoss(nn.Module):
             eps (float): Epsilon for small value. Default: 1e-5
 
         Returns:
-            torch.Tensor: Proposal evalutaion classification loss.
+            torch.Tensor: Proposal evaluation classification loss.
         """
         pmask = (gt_iou_map > threshold).float()
         nmask = (gt_iou_map <= threshold).float()

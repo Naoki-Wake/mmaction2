@@ -1,10 +1,10 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 import torch
 import torch.nn as nn
 from mmcv.cnn import ConvModule, constant_init, normal_init, xavier_init
 
-from ..builder import build_loss
-from ..registry import NECKS
+from ..builder import NECKS, build_loss
 
 
 class Identity(nn.Module):

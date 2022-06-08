@@ -1,7 +1,7 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 
 from mmaction.core.bbox import bbox2result
-from mmaction.utils import import_module_error_class
 
 try:
     from mmdet.core.bbox import bbox2roi
@@ -17,9 +17,25 @@ if mmdet_imported:
     class AVARoIHead(StandardRoIHead):
 
         def _bbox_forward(self, x, rois, img_metas):
-            bbox_feat = self.bbox_roi_extractor(x, rois)
+            """Defines the computation performed to get bbox predictions.
+
+            Args:
+                x (torch.Tensor): The input tensor.
+                rois (torch.Tensor): The regions of interest.
+                img_metas (list): The meta info of images
+
+            Returns:
+                dict: bbox predictions with features and classification scores.
+            """
+            bbox_feat, global_feat = self.bbox_roi_extractor(x, rois)
+
             if self.with_shared_head:
-                bbox_feat = self.shared_head(bbox_feat, rois, img_metas)
+                bbox_feat = self.shared_head(
+                    bbox_feat,
+                    feat=global_feat,
+                    rois=rois,
+                    img_metas=img_metas)
+
             cls_score, bbox_pred = self.bbox_head(bbox_feat)
 
             bbox_results = dict(
@@ -49,6 +65,7 @@ if mmdet_imported:
                         img_metas,
                         proposals=None,
                         rescale=False):
+            """Defines the computation performed for simple testing."""
             assert self.with_bbox, 'Bbox head must be implemented.'
 
             if isinstance(x, tuple):
@@ -100,6 +117,12 @@ if mmdet_imported:
             return det_bboxes, det_labels
 else:
     # Just define an empty class, so that __init__ can import it.
-    @import_module_error_class('mmdet')
     class AVARoIHead:
-        pass
+
+        def __init__(self, *args, **kwargs):
+            raise ImportError(
+                'Failed to import `bbox2roi` from `mmdet.core.bbox`, '
+                'or failed to import `HEADS` from `mmdet.models`, '
+                'or failed to import `StandardRoIHead` from '
+                '`mmdet.models.roi_heads`. You will be unable to use '
+                '`AVARoIHead`. ')

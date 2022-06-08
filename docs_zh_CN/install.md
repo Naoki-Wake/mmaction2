@@ -4,13 +4,15 @@
 
 <!-- TOC -->
 
-- [安装依赖包](#安装依赖包)
-- [MMAction2 的安装步骤](#MMAction2-的安装步骤)
-- [CPU 环境下的安装步骤](#CPU-环境下的安装步骤)
-- [利用 Docker 镜像安装 MMAction2](#利用-Docker-镜像安装-MMAction2)
-- [源码安装 MMAction2](#源码安装-MMAction2)
-- [在多个 MMAction2 版本下进行开发](#在多个-MMAction2-版本下进行开发)
-- [安装验证](#安装验证)
+- [安装](#%E5%AE%89%E8%A3%85)
+  - [安装依赖包](#%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96%E5%8C%85)
+  - [准备环境](#%E5%87%86%E5%A4%87%E7%8E%AF%E5%A2%83)
+  - [MMAction2 的安装步骤](#mmaction2-%E7%9A%84%E5%AE%89%E8%A3%85%E6%AD%A5%E9%AA%A4)
+  - [CPU 环境下的安装步骤](#cpu-%E7%8E%AF%E5%A2%83%E4%B8%8B%E7%9A%84%E5%AE%89%E8%A3%85%E6%AD%A5%E9%AA%A4)
+  - [利用 Docker 镜像安装 MMAction2](#%E5%88%A9%E7%94%A8-docker-%E9%95%9C%E5%83%8F%E5%AE%89%E8%A3%85-mmaction2)
+  - [源码安装 MMAction2](#%E6%BA%90%E7%A0%81%E5%AE%89%E8%A3%85-mmaction2)
+  - [在多个 MMAction2 版本下进行开发](#%E5%9C%A8%E5%A4%9A%E4%B8%AA-mmaction2-%E7%89%88%E6%9C%AC%E4%B8%8B%E8%BF%9B%E8%A1%8C%E5%BC%80%E5%8F%91)
+  - [安装验证](#%E5%AE%89%E8%A3%85%E9%AA%8C%E8%AF%81)
 
 <!-- TOC -->
 
@@ -29,10 +31,8 @@
 - [PyTurboJPEG](https://github.com/lilohuang/PyTurboJPEG) (可选项)：`pip install PyTurboJPEG`。
 - [denseflow](https://github.com/open-mmlab/denseflow) (可选项)：可参考 [这里](https://github.com/innerlee/setup) 获取简便安装步骤。
 - [moviepy](https://zulko.github.io/moviepy/) (可选项)：`pip install moviepy`. 官方安装步骤可参考 [这里](https://zulko.github.io/moviepy/install.html)。**特别地**，如果安装过程碰到 [这个问题](https://github.com/Zulko/moviepy/issues/693)，可参考：
-    1. 对于 Windows 用户, [ImageMagick](https://www.imagemagick.org/script/index.php) 将不会被 MoviePy 自动检测到，
-    用户需要对 `moviepy/config_defaults.py` 文件进行修改，以提供 ImageMagick 的二进制文件（即，`magick`）的路径，如 `IMAGEMAGICK_BINARY = "C:\\Program Files\\ImageMagick_VERSION\\magick.exe"`
-    2. 对于 Linux 用户, 如果 [ImageMagick](https://www.imagemagick.org/script/index.php) 没有被 `moviepy` 检测到，用于需要对 `/etc/ImageMagick-6/policy.xml` 文件进行修改，把文件中的
-    `<policy domain="path" rights="none" pattern="@*" />` 代码行修改为 `<!-- <policy domain="path" rights="none" pattern="@*" /> -->`。
+  1. 对于 Windows 用户, [ImageMagick](https://www.imagemagick.org/script/index.php) 将不会被 MoviePy 自动检测到，用户需要对 `moviepy/config_defaults.py` 文件进行修改，以提供 ImageMagick 的二进制文件（即，`magick`）的路径，如 `IMAGEMAGICK_BINARY = "C:\\Program Files\\ImageMagick_VERSION\\magick.exe"`
+  2. 对于 Linux 用户, 如果 [ImageMagick](https://www.imagemagick.org/script/index.php) 没有被 `moviepy` 检测到，用于需要对 `/etc/ImageMagick-6/policy.xml` 文件进行修改，把文件中的 `<policy domain="path" rights="none" pattern="@*" />` 代码行修改为 `<!-- <policy domain="path" rights="none" pattern="@*" /> -->`。
 - [Pillow-SIMD](https://docs.fast.ai/performance.html#pillow-simd) (可选项)：可使用如下脚本进行安装：
 
 ```shell
@@ -46,7 +46,7 @@ conda install -y jpeg libtiff
 **注意**：用户需要首先运行 `pip uninstall mmcv` 命令，以确保 mmcv 被成功安装。
 如果 mmcv 和 mmcv-full 同时被安装, 会报 `ModuleNotFoundError` 的错误。
 
-### MMAction2 的安装步骤
+## 准备环境
 
 a. 创建并激活 conda 虚拟环境，如：
 
@@ -80,17 +80,31 @@ conda install pytorch=1.3.1 cudatoolkit=9.2 torchvision=0.4.2 -c pytorch
 
 如果 PyTorch 是由源码进行编译安装（而非直接下载预编译好的安装包），则可以使用更多的 CUDA 版本（如 9.0 版本）。
 
-c. 安装 mmcv。MMAction2 推荐用户使用如下的命令安装预编译好的 mmcv。
+## MMAction2 的安装步骤
+
+这里推荐用户使用 [MIM](https://github.com/open-mmlab/mim) 安装 MMAction2。
 
 ```shell
-pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/{cu_version}/{torch_version}/index.html
+pip install git+https://github.com/open-mmlab/mim.git
+mim install mmaction2 -f https://github.com/open-mmlab/mmaction2.git
 ```
 
-其中，命令里 url 的 ``{cu_version}`` 和 ``{torch_version}`` 变量需由用户进行指定。
-例如，如果想要安装 ``CUDA 11`` 和 ``PyTorch 1.7.0`` 下的最新版 ``mmcv-full``，可使用以下命令：
+MIM 可以自动安装 OpenMMLab 项目及其依赖。
+
+或者，用户也可以通过以下步骤手动安装 MMAction2。
+
+a. 安装 mmcv-full，我们推荐您安装以下预构建包：
 
 ```shell
-pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu110/torch1.7.0/index.html
+# pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/{cu_version}/{torch_version}/index.html
+pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu102/torch1.10.0/index.html
+```
+
+PyTorch 在 1.x.0 和 1.x.1 之间通常是兼容的，故 mmcv-full 只提供 1.x.0 的编译包。如果你的 PyTorch 版本是 1.x.1，你可以放心地安装在 1.x.0 版本编译的 mmcv-full。
+
+```
+# 我们可以忽略 PyTorch 的小版本号
+pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu102/torch1.10/index.html
 ```
 
 可查阅 [这里](https://github.com/open-mmlab/mmcv#installation) 以参考不同版本的 MMCV 所兼容的 PyTorch 和 CUDA 版本。
@@ -113,36 +127,36 @@ pip install mmcv-full
 
 **注意**：如果 mmcv 已经被安装，用户需要使用 `pip uninstall mmcv` 命令进行卸载。如果 mmcv 和 mmcv-full 同时被安装, 会报 `ModuleNotFoundError` 的错误。
 
-d. 克隆 MMAction2 库。
+b. 克隆 MMAction2 库。
 
 ```shell
 git clone https://github.com/open-mmlab/mmaction2.git
 cd mmaction2
 ```
 
-e. 安装依赖包和 MMAction2。
+c. 安装依赖包和 MMAction2。
 
 ```shell
 pip install -r requirements/build.txt
 pip install -v -e .  # or "python setup.py develop"
 ```
 
-如果实在 macOS 环境安装 MMAction2，则需使用如下命令：
+如果是在 macOS 环境安装 MMAction2，则需使用如下命令：
 
 ```shell
 CC=clang CXX=clang++ CFLAGS='-stdlib=libc++' pip install -e .
 ```
 
-f. 安装 mmdetection 以支持时空检测任务。
+d. 安装 mmdetection 以支持时空检测任务。
 
-如果用户不像做时空检测相关任务，这部分步骤可以选择跳过。
+如果用户不想做时空检测相关任务，这部分步骤可以选择跳过。
 
 可参考 [这里](https://github.com/open-mmlab/mmdetection#installation) 进行 mmdetection 的安装。
 
 注意：
 
-1. 在步骤 d 中，git commit 的 id 将会被写到版本号中，如 0.6.0+2e7045c。这个版本号也会被保存到训练好的模型中。
-   这里推荐用户每次在步骤 d 中对本地代码和 github 上的源码进行同步。如果 C++/CUDA 代码被修改，就必须进行这一步骤。
+1. 在步骤 b 中，git commit 的 id 将会被写到版本号中，如 0.6.0+2e7045c。这个版本号也会被保存到训练好的模型中。
+   这里推荐用户每次在步骤 b 中对本地代码和 github 上的源码进行同步。如果 C++/CUDA 代码被修改，就必须进行这一步骤。
 
 2. 根据上述步骤，MMAction2 就会以 `dev` 模式被安装，任何本地的代码修改都会立刻生效，不需要再重新安装一遍（除非用户提交了 commits，并且想更新版本号）。
 
@@ -154,13 +168,13 @@ f. 安装 mmdetection 以支持时空检测任务。
    要想使用一些可选的依赖包，如 `decord`，用户需要通过 `pip install -r requirements/optional.txt` 进行安装，
    或者通过调用 `pip`（如 `pip install -v -e .[optional]`，这里的 `[optional]` 可替换为 `all`，`tests`，`build` 或 `optional`） 指定安装对应的依赖包，如 `pip install -v -e .[tests,build]`。
 
-### CPU 环境下的安装步骤
+## CPU 环境下的安装步骤
 
 MMAction2 可以在只有 CPU 的环境下安装（即无法使用 GPU 的环境）。
 
 在 CPU 模式下，用户可以运行 `demo/demo.py` 的代码。
 
-### 利用 Docker 镜像安装 MMAction2
+## 利用 Docker 镜像安装 MMAction2
 
 MMAction2 提供一个 [Dockerfile](/docker/Dockerfile) 用户创建 docker 镜像。
 
@@ -177,7 +191,7 @@ docker build -f ./docker/Dockerfile --rm -t mmaction2 .
 docker run --gpus all --shm-size=8g -it -v {DATA_DIR}:/mmaction2/data mmaction2
 ```
 
-### 源码安装 MMAction2
+## 源码安装 MMAction2
 
 这里提供了 conda 下安装 MMAction2 并链接数据集路径的完整脚本（假设 Kinetics-400 数据的路径在 $KINETICS400_ROOT）。
 
@@ -201,7 +215,7 @@ mkdir data
 ln -s $KINETICS400_ROOT data
 ```
 
-### 在多个 MMAction2 版本下进行开发
+## 在多个 MMAction2 版本下进行开发
 
 MMAction2 的训练和测试脚本已经修改了 `PYTHONPATH` 变量，以确保其能够运行当前目录下的 MMAction2。
 
@@ -211,7 +225,7 @@ MMAction2 的训练和测试脚本已经修改了 `PYTHONPATH` 变量，以确�
 PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
 ```
 
-### 安装验证
+## 安装验证
 
 为了验证 MMAction2 和所需的依赖包是否已经安装成功，
 用户可以运行以下的 python 代码，以测试其是否能成功地初始化动作识别器，并进行演示视频的推理：
@@ -226,5 +240,5 @@ device = torch.device(device)
 
 model = init_recognizer(config_file, device=device)
 # 进行演示视频的推理
-inference_recognizer(model, 'demo/demo.mp4', 'demo/label_map_k400.txt')
+inference_recognizer(model, 'demo/demo.mp4')
 ```

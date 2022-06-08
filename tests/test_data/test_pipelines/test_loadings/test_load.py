@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import copy
 
 import numpy as np
@@ -102,7 +103,7 @@ class TestLoad(BaseTestLoading):
                                        self.bsp_feature_dir)
         load_proposals_result = load_proposals(action_result)
         assert assert_dict_has_keys(load_proposals_result, target_keys)
-        assert (load_proposals_result['bsp_feature'].shape[0] == 5)
+        assert load_proposals_result['bsp_feature'].shape[0] == 5
         assert load_proposals_result['tmin'].shape == (5, )
         assert_array_almost_equal(
             load_proposals_result['tmin'], np.arange(0.1, 0.6, 0.1), decimal=4)

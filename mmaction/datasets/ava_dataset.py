@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import copy
 import os
 import os.path as osp
@@ -11,7 +12,7 @@ from mmcv.utils import print_log
 from ..core.evaluation.ava_utils import ava_eval, read_labelmap, results2csv
 from ..utils import get_root_logger
 from .base import BaseDataset
-from .registry import DATASETS
+from .builder import DATASETS
 
 
 @DATASETS.register_module()
@@ -61,6 +62,10 @@ class AVADataset(BaseDataset):
             Default: None.
         filename_tmpl (str): Template for each filename.
             Default: 'img_{:05}.jpg'.
+        start_index (int): Specify a start index for frames in consideration of
+            different filename format. However, when taking videos as input,
+            it should be set to 0, since frames loaded from videos count
+            from 0. Default: 0.
         proposal_file (str): Path to the proposal file like
             ``ava_dense_proposals_{train, val}.FAIR.recall_93.9.pkl``.
             Default: None.
@@ -86,9 +91,8 @@ class AVADataset(BaseDataset):
             default value is referred from the official website. Default: 902.
         timestamp_end (int): The end point of included timestamps. The
             default value is referred from the official website. Default: 1798.
+        fps (int): Overrides the default FPS for the dataset. Default: 30.
     """
-
-    _FPS = 30
 
     def __init__(self,
                  ann_file,
@@ -96,6 +100,7 @@ class AVADataset(BaseDataset):
                  pipeline,
                  label_file=None,
                  filename_tmpl='img_{:05}.jpg',
+                 start_index=0,
                  proposal_file=None,
                  person_det_score_thr=0.9,
                  num_classes=81,
@@ -105,9 +110,11 @@ class AVADataset(BaseDataset):
                  modality='RGB',
                  num_max_proposals=1000,
                  timestamp_start=900,
-                 timestamp_end=1800):
+                 timestamp_end=1800,
+                 fps=30):
         # since it inherits from `BaseDataset`, some arguments
         # should be assigned before performing `load_annotations()`
+        self._FPS = fps  # Keep this as standard
         self.custom_classes = custom_classes
         if custom_classes is not None:
             assert num_classes == len(custom_classes) + 1
@@ -134,6 +141,7 @@ class AVADataset(BaseDataset):
             pipeline,
             data_prefix,
             test_mode,
+            start_index=start_index,
             modality=modality,
             num_classes=num_classes)
 
@@ -150,19 +158,32 @@ class AVADataset(BaseDataset):
             self.video_infos = [self.video_infos[i] for i in valid_indexes]
 
     def parse_img_record(self, img_records):
+        """Merge image records of the same entity at the same time.
+
+        Args:
+            img_records (list[dict]): List of img_records (lines in AVA
+                annotations).
+
+        Returns:
+            tuple(list): A tuple consists of lists of bboxes, action labels and
+                entity_ids
+        """
         bboxes, labels, entity_ids = [], [], []
         while len(img_records) > 0:
             img_record = img_records[0]
             num_img_records = len(img_records)
-            selected_records = list(
-                filter(
-                    lambda x: np.array_equal(x['entity_box'], img_record[
-                        'entity_box']), img_records))
+
+            selected_records = [
+                x for x in img_records
+                if np.array_equal(x['entity_box'], img_record['entity_box'])
+            ]
+
             num_selected_records = len(selected_records)
-            img_records = list(
-                filter(
-                    lambda x: not np.array_equal(x['entity_box'], img_record[
-                        'entity_box']), img_records))
+            img_records = [
+                x for x in img_records if
+                not np.array_equal(x['entity_box'], img_record['entity_box'])
+            ]
+
             assert len(img_records) + num_selected_records == num_img_records
 
             bboxes.append(img_record['entity_box'])
@@ -184,6 +205,7 @@ class AVADataset(BaseDataset):
         return bboxes, labels, entity_ids
 
     def filter_exclude_file(self):
+        """Filter out records in the exclude_file."""
         valid_indexes = []
         if self.exclude_file is None:
             valid_indexes = list(range(len(self.video_infos)))
@@ -201,6 +223,7 @@ class AVADataset(BaseDataset):
         return valid_indexes
 
     def load_annotations(self):
+        """Load AVA annotations."""
         video_infos = []
         records_dict_by_img = defaultdict(list)
         with open(self.ann_file, 'r') as fin:
@@ -326,6 +349,7 @@ class AVADataset(BaseDataset):
         return self.pipeline(results)
 
     def dump_results(self, results, out):
+        """Dump predictions into a csv file."""
         assert out.endswith('csv')
         results2csv(self, results, out, self.custom_classes)
 
@@ -334,7 +358,7 @@ class AVADataset(BaseDataset):
                  metrics=('mAP', ),
                  metric_options=None,
                  logger=None):
-        # need to create a temp result file
+        """Evaluate the prediction results and report mAP."""
         assert len(metrics) == 1 and metrics[0] == 'mAP', (
             'For evaluation on AVADataset, you need to use metrics "mAP" '
             'See https://github.com/open-mmlab/mmaction2/pull/567 '

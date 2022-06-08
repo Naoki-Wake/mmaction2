@@ -2,7 +2,7 @@
 
 ## 简介
 
-[DATASET]
+<!-- [DATASET] -->
 
 ```BibTeX
 @article{duan2020omni,
@@ -18,14 +18,14 @@ OmniSource 数据集中所有类别均来自 Kinetics-400。MMAction2 所提供�
 
 MMAction2 提供所有数据源中属于 Mini-Kinetics 200 类动作的数据，这些数据源包含：Kinetics 数据集，Kinetics 原始数据集（未经裁剪的长视频），来自 Google 和 Instagram 的网络图片，来自 Instagram 的网络视频。为获取这一数据集，用户需先填写 [数据申请表](https://docs.google.com/forms/d/e/1FAIpQLSd8_GlmHzG8FcDbW-OEu__G7qLgOSYZpH-i5vYVJcu7wcb_TQ/viewform?usp=sf_link)。在接收到申请后，下载链接将被发送至用户邮箱。由于发布的数据集均为爬取所得的原始数据，数据集较大，下载需要一定时间。下表中提供了 OmniSource 数据集各个分量的统计信息。
 
-|   数据集名称    | 样本个数 | 所占空间 | 过滤使用的 Teacher 模型 | 过滤后的样本个数 | 与 k200_val 中样本相似（疑似重复）的样本个数 |
-| :-------------: | :------: | :------: | :---------------------: | :--------------: | :------------------------------------------: |
-|   k200_train    |  76030   |  45.6G   |           N/A           |       N/A        |                     N/A                      |
-|    k200_val     |   4838   |   2.9G   |           N/A           |       N/A        |                     N/A                      |
-| googleimage_200 | 3050880  |  265.5G  |      TSN-R50-8seg       |     1188695      |                     967                      |
-|  insimage_200   | 3654650  |  224.4G  |      TSN-R50-8seg       |      879726      |                     116                      |
-|  insvideo_200   |  732855  | 1487.6G  |    SlowOnly-8x8-R50     |      330680      |                     956                      |
-| k200_raw_train  |  76027   |  963.5G  |    SlowOnly-8x8-R50     |       N/A        |                     N/A                      |
+|      数据集名称      |  样本个数   |  所占空间   | 过滤使用的 Teacher 模型 | 过滤后的样本个数 | 与 k200_val 中样本相似（疑似重复）的样本个数 |
+| :-------------: | :-----: | :-----: | :--------------: | :------: | :-------------------------: |
+|   k200_train    |  76030  |  45.6G  |       N/A        |   N/A    |             N/A             |
+|    k200_val     |  4838   |  2.9G   |       N/A        |   N/A    |             N/A             |
+| googleimage_200 | 3050880 | 265.5G  |   TSN-R50-8seg   | 1188695  |             967             |
+|  insimage_200   | 3654650 | 224.4G  |   TSN-R50-8seg   |  879726  |             116             |
+|  insvideo_200   | 732855  | 1487.6G | SlowOnly-8x8-R50 |  330680  |             956             |
+| k200_raw_train  |  76027  | 963.5G  | SlowOnly-8x8-R50 |   N/A    |             N/A             |
 
 MMAction2 所发布的 OmniSource 数据集目录结构如下所示：
 
@@ -88,7 +88,7 @@ OmniSource/
 data/OmniSource/
 ├── annotations
 │   ├── googleimage_200
-│   │   └── tsn_8seg_googleimage_200_wodup.txt    Postive file list of images crawled from Google, filtered by the teacher model, after de-duplication.
+│   │   └── tsn_8seg_googleimage_200_wodup.txt    Positive file list of images crawled from Google, filtered by the teacher model, after de-duplication.
 │   ├── insimage_200
 │   │   └── tsn_8seg_insimage_200_wodup.txt
 │   ├── insvideo_200

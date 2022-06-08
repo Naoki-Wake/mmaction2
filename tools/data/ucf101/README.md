@@ -2,7 +2,7 @@
 
 ## Introduction
 
-[DATASET]
+<!-- [DATASET] -->
 
 ```BibTeX
 @article{Soomro2012UCF101AD,
@@ -36,7 +36,7 @@ bash download_videos.sh
 For better decoding speed, you can resize the original videos into smaller sized, densely encoded version by:
 
 ```
-python ../resize_video.py ../../../data/ucf101/videos/ ../../../data/ucf101/videos_256p_dense_cache --dense --level 2 --ext avi
+python ../resize_videos.py ../../../data/ucf101/videos/ ../../../data/ucf101/videos_256p_dense_cache --dense --level 2 --ext avi
 ```
 
 ## Step 3. Extract RGB and Flow
@@ -67,7 +67,7 @@ If you didn't install denseflow, you can still extract RGB frames using OpenCV b
 bash extract_rgb_frames_opencv.sh
 ```
 
-If both are required, run the following script to extract frames using "tvl1" algorithm.
+If Optical Flow is also required, run the following script to extract flow using "tvl1" algorithm.
 
 ```shell
 bash extract_frames.sh

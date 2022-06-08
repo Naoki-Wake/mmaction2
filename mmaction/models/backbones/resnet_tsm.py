@@ -1,9 +1,10 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch
 import torch.nn as nn
 from mmcv.cnn import NonLocal3d
 from torch.nn.modules.utils import _ntuple
 
-from ..registry import BACKBONES
+from ..builder import BACKBONES
 from .resnet import ResNet
 
 

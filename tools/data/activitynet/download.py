@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 # This scripts is copied from
 # https://github.com/activitynet/ActivityNet/blob/master/Crawler/Kinetics/download.py  # noqa: E501
 # The code is licensed under the MIT licence.
@@ -131,7 +132,7 @@ def main(input_csv, output_dir, anno_file, num_jobs=24, is_bsn_case=False):
 
     if is_bsn_case:
         anno_file_bak = anno_file.replace('.json', '_bak.json')
-        os.system(f'mv {anno_file} {anno_file_bak}')
+        os.rename(anno_file, anno_file_bak)
         mmcv.dump(annotation, anno_file)
 
 

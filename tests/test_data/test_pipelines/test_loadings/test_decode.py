@@ -1,13 +1,14 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import copy
+import platform
 
 import numpy as np
-import pytest
 from mmcv.utils import assert_dict_has_keys
 
 from mmaction.datasets.pipelines import (AudioDecode, AudioDecodeInit,
                                          DecordDecode, DecordInit,
-                                         FrameSelector, OpenCVDecode,
-                                         OpenCVInit, PyAVDecode,
+                                         OpenCVDecode, OpenCVInit, PIMSDecode,
+                                         PIMSInit, PyAVDecode,
                                          PyAVDecodeMotionVector, PyAVInit,
                                          RawFrameDecode)
 from .base import BaseTestLoading
@@ -43,7 +44,7 @@ class TestDecode(BaseTestLoading):
         assert np.shape(pyav_decode_result['imgs']) == (len(
             video_result['frame_inds']), 256, 340, 3)
         assert repr(pyav_decode) == (f'{pyav_decode.__class__.__name__}('
-                                     f'multi_thread={False})')
+                                     f'multi_thread={False}, mode=accurate)')
 
         # test PyAV with 1 dim input and start_index = 0
         video_result = copy.deepcopy(self.video_results)
@@ -73,7 +74,7 @@ class TestDecode(BaseTestLoading):
         assert np.shape(pyav_decode_result['imgs']) == (len(
             video_result['frame_inds']), 256, 340, 3)
         assert repr(pyav_decode) == (f'{pyav_decode.__class__.__name__}('
-                                     f'multi_thread={True})')
+                                     f'multi_thread={True}, mode=accurate)')
 
         # test PyAV with 2 dim input
         video_result = copy.deepcopy(self.video_results)
@@ -118,8 +119,55 @@ class TestDecode(BaseTestLoading):
         assert np.shape(pyav_decode_result['imgs']) == (len(
             video_result['frame_inds']), 256, 340, 3)
 
-        assert repr(pyav_decode) == pyav_decode.__class__.__name__ + \
-            f'(multi_thread={True})'
+        # PyAV with efficient mode
+        video_result = copy.deepcopy(self.video_results)
+        video_result['frame_inds'] = np.arange(1, self.total_frames, 5)
+        pyav_init = PyAVInit()
+        pyav_init_result = pyav_init(video_result)
+        video_result['video_reader'] = pyav_init_result['video_reader']
+
+        pyav_decode = PyAVDecode(multi_thread=True, mode='efficient')
+        pyav_decode_result = pyav_decode(video_result)
+        assert assert_dict_has_keys(pyav_decode_result, target_keys)
+        assert pyav_decode_result['original_shape'] == (256, 340)
+        assert np.shape(pyav_decode_result['imgs']) == (len(
+            video_result['frame_inds']), 256, 340, 3)
+        assert pyav_decode_result['video_reader'] is None
+
+        assert (repr(pyav_decode) == pyav_decode.__class__.__name__ +
+                f'(multi_thread={True}, mode=efficient)')
+
+    def test_pims_init(self):
+        target_keys = ['video_reader', 'total_frames']
+        video_result = copy.deepcopy(self.video_results)
+        pims_init = PIMSInit()
+        pims_init_result = pims_init(video_result)
+        assert assert_dict_has_keys(pims_init_result, target_keys)
+        assert pims_init_result['total_frames'] == 300
+
+        pims_init = PIMSInit(mode='efficient')
+        pims_init_result = pims_init(video_result)
+        assert assert_dict_has_keys(pims_init_result, target_keys)
+        assert pims_init_result['total_frames'] == 300
+
+        assert repr(pims_init) == (f'{pims_init.__class__.__name__}'
+                                   f'(io_backend=disk, mode=efficient)')
+
+    def test_pims_decode(self):
+        target_keys = ['frame_inds', 'imgs', 'original_shape']
+
+        video_result = copy.deepcopy(self.video_results)
+        video_result['frame_inds'] = np.arange(0, self.total_frames,
+                                               2)[:, np.newaxis]
+        pims_init = PIMSInit()
+        pims_init_result = pims_init(video_result)
+
+        pims_decode = PIMSDecode()
+        pims_decode_result = pims_decode(pims_init_result)
+        assert assert_dict_has_keys(pims_decode_result, target_keys)
+        assert pims_decode_result['original_shape'] == (256, 340)
+        assert np.shape(pims_decode_result['imgs']) == (len(
+            video_result['frame_inds']), 256, 340, 3)
 
     def test_decord_init(self):
         target_keys = ['video_reader', 'total_frames']
@@ -187,12 +235,14 @@ class TestDecode(BaseTestLoading):
         decord_init_result = decord_init(video_result)
         video_result['video_reader'] = decord_init_result['video_reader']
 
-        decord_decode = DecordDecode()
+        decord_decode = DecordDecode(mode='efficient')
         decord_decode_result = decord_decode(video_result)
         assert assert_dict_has_keys(decord_decode_result, target_keys)
         assert decord_decode_result['original_shape'] == (256, 340)
         assert np.shape(decord_decode_result['imgs']) == (len(
             video_result['frame_inds']), 256, 340, 3)
+        assert repr(decord_decode) == (f'{decord_decode.__class__.__name__}('
+                                       f'mode=efficient)')
 
     def test_opencv_init(self):
         target_keys = ['new_path', 'video_reader', 'total_frames']
@@ -258,11 +308,6 @@ class TestDecode(BaseTestLoading):
         assert opencv_decode_result['original_shape'] == (256, 340)
         assert np.shape(opencv_decode_result['imgs']) == (len(
             video_result['frame_inds']), 256, 340, 3)
-
-    def test_rawframe_selector(self):
-
-        with pytest.warns(UserWarning):
-            FrameSelector(io_backend='disk')
 
     def test_rawframe_decode(self):
         target_keys = ['frame_inds', 'imgs', 'original_shape', 'modality']
@@ -364,34 +409,35 @@ class TestDecode(BaseTestLoading):
                                              240, 320)
         assert results['original_shape'] == (240, 320)
 
-        # test frame selector in turbojpeg decording backend
-        # when start_index = 0
-        inputs = copy.deepcopy(self.frame_results)
-        inputs['frame_inds'] = np.arange(0, self.total_frames, 5)
-        # since the test images start with index 1, we plus 1 to frame_inds
-        # in order to pass the CI
-        inputs['frame_inds'] = inputs['frame_inds'] + 1
-        frame_selector = RawFrameDecode(
-            io_backend='disk', decoding_backend='turbojpeg')
-        results = frame_selector(inputs)
-        assert assert_dict_has_keys(results, target_keys)
-        assert np.shape(results['imgs']) == (len(inputs['frame_inds']), 240,
-                                             320, 3)
-        assert results['original_shape'] == (240, 320)
+        if platform.system() != 'Windows':
+            # test frame selector in turbojpeg decoding backend
+            # when start_index = 0
+            inputs = copy.deepcopy(self.frame_results)
+            inputs['frame_inds'] = np.arange(0, self.total_frames, 5)
+            # since the test images start with index 1, we plus 1 to frame_inds
+            # in order to pass the CI
+            inputs['frame_inds'] = inputs['frame_inds'] + 1
+            frame_selector = RawFrameDecode(
+                io_backend='disk', decoding_backend='turbojpeg')
+            results = frame_selector(inputs)
+            assert assert_dict_has_keys(results, target_keys)
+            assert np.shape(results['imgs']) == (len(inputs['frame_inds']),
+                                                 240, 320, 3)
+            assert results['original_shape'] == (240, 320)
 
-        # test frame selector in turbojpeg decording backend
-        inputs = copy.deepcopy(self.frame_results)
-        inputs['frame_inds'] = np.arange(1, self.total_frames, 5)
-        frame_selector = RawFrameDecode(
-            io_backend='disk', decoding_backend='turbojpeg')
-        results = frame_selector(inputs)
-        assert assert_dict_has_keys(results, target_keys)
-        assert np.shape(results['imgs']) == (len(inputs['frame_inds']), 240,
-                                             320, 3)
-        assert results['original_shape'] == (240, 320)
-        assert repr(frame_selector) == (f'{frame_selector.__class__.__name__}('
-                                        f'io_backend=disk, '
-                                        f'decoding_backend=turbojpeg)')
+            # test frame selector in turbojpeg decoding backend
+            inputs = copy.deepcopy(self.frame_results)
+            inputs['frame_inds'] = np.arange(1, self.total_frames, 5)
+            frame_selector = RawFrameDecode(
+                io_backend='disk', decoding_backend='turbojpeg')
+            results = frame_selector(inputs)
+            assert assert_dict_has_keys(results, target_keys)
+            assert np.shape(results['imgs']) == (len(inputs['frame_inds']),
+                                                 240, 320, 3)
+            assert results['original_shape'] == (240, 320)
+            assert repr(frame_selector) == (
+                f'{frame_selector.__class__.__name__}(io_backend=disk, '
+                f'decoding_backend=turbojpeg)')
 
     def test_audio_decode_init(self):
         target_keys = ['audios', 'length', 'sample_rate']

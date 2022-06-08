@@ -1,4 +1,5 @@
-from .registry import DATASETS
+# Copyright (c) OpenMMLab. All rights reserved.
+from .builder import DATASETS
 from .video_dataset import VideoDataset
 
 

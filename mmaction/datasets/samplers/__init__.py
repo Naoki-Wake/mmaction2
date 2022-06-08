@@ -1,3 +1,5 @@
-from .distributed_sampler import DistributedPowerSampler, DistributedSampler
+# Copyright (c) OpenMMLab. All rights reserved.
+from .distributed_sampler import (ClassSpecificDistributedSampler,
+                                  DistributedSampler)
 
-__all__ = ['DistributedSampler', 'DistributedPowerSampler']
+__all__ = ['DistributedSampler', 'ClassSpecificDistributedSampler']

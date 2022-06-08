@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y git ninja-build libglib2.0-0 libsm6 lib
 ENV updated-on 29-March-21
 
 # Install mmcv-full
-RUN pip install mmcv-full==latest+torch1.6.0+cu101 -f https://download.openmmlab.com/mmcv/dist/index.html
+RUN pip install mmcv-full==latest -f https://download.openmmlab.com/mmcv/dist/cu101/torch1.6.0/index.html
 
 # Install MMAction2
 RUN conda clean --all

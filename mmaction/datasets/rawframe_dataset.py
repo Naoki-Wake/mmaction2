@@ -1,11 +1,12 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import copy
 import os.path as osp
 
-import numpy as np
 import torch
 
+from mmaction.datasets.pipelines import Resize
 from .base import BaseDataset
-from .registry import DATASETS
+from .builder import DATASETS
 
 
 @DATASETS.register_module()
@@ -77,11 +78,13 @@ class RawframeDataset(BaseDataset):
         sample_by_class (bool): Sampling by class, should be set `True` when
             performing inter-class data balancing. Only compatible with
             `multi_class == False`. Only applies for training. Default: False.
-        power (float | None): We support sampling data with the probability
+        power (float): We support sampling data with the probability
             proportional to the power of its label frequency (freq ^ power)
             when sampling data. `power == 1` indicates uniformly sampling all
             data; `power == 0` indicates uniformly sampling all classes.
-            Default: None.
+            Default: 0.
+        dynamic_length (bool): If the dataset length is dynamic (used by
+            ClassSpecificDistributedSampler). Default: False.
     """
 
     def __init__(self,
@@ -96,7 +99,9 @@ class RawframeDataset(BaseDataset):
                  start_index=0,#1
                  modality='RGB',
                  sample_by_class=False,
-                 power=None):
+                 power=0.,
+                 dynamic_length=False,
+                 **kwargs):
         self.filename_tmpl = filename_tmpl
         self.with_offset = with_offset
         super().__init__(
@@ -109,7 +114,11 @@ class RawframeDataset(BaseDataset):
             start_index,
             modality,
             sample_by_class=sample_by_class,
-            power=power)
+            power=power,
+            dynamic_length=dynamic_length)
+        self.short_cycle_factors = kwargs.get('short_cycle_factors',
+                                              [0.5, 0.7071])
+        self.default_s = kwargs.get('default_s', (224, 224))
 
     def load_annotations(self):
         """Load annotation file to get video information."""
@@ -151,32 +160,45 @@ class RawframeDataset(BaseDataset):
 
     def prepare_train_frames(self, idx):
         """Prepare the frames for training given the index."""
-        if self.sample_by_class:
-            # Then, the idx is the class index
-            samples = self.video_infos_by_class[idx]
-            results = copy.deepcopy(np.random.choice(samples))
-        else:
+
+        def pipeline_for_a_sample(idx):
             results = copy.deepcopy(self.video_infos[idx])
-        results['filename_tmpl'] = self.filename_tmpl
-        results['modality'] = self.modality
-        results['start_index'] = self.start_index
+            results['filename_tmpl'] = self.filename_tmpl
+            results['modality'] = self.modality
+            results['start_index'] = self.start_index
 
-        # prepare tensor in getitem
-        if self.multi_class:
-            onehot = torch.zeros(self.num_classes)
-            onehot[results['label']] = 1.
-            results['label'] = onehot
+            # prepare tensor in getitem
+            if self.multi_class:
+                onehot = torch.zeros(self.num_classes)
+                onehot[results['label']] = 1.
+                results['label'] = onehot
 
-        return self.pipeline(results)
+            return self.pipeline(results)
+
+        if isinstance(idx, tuple):
+            index, short_cycle_idx = idx
+            last_resize = None
+            for trans in self.pipeline.transforms:
+                if isinstance(trans, Resize):
+                    last_resize = trans
+            origin_scale = self.default_s
+            long_cycle_scale = last_resize.scale
+
+            if short_cycle_idx in [0, 1]:
+                # 0 and 1 is hard-coded as PySlowFast
+                scale_ratio = self.short_cycle_factors[short_cycle_idx]
+                target_scale = tuple(
+                    [int(round(scale_ratio * s)) for s in origin_scale])
+                last_resize.scale = target_scale
+            res = pipeline_for_a_sample(index)
+            last_resize.scale = long_cycle_scale
+            return res
+        else:
+            return pipeline_for_a_sample(idx)
 
     def prepare_test_frames(self, idx):
         """Prepare the frames for testing given the index."""
-        if self.sample_by_class:
-            # Then, the idx is the class index
-            samples = self.video_infos_by_class[idx]
-            results = copy.deepcopy(np.random.choice(samples))
-        else:
-            results = copy.deepcopy(self.video_infos[idx])
+        results = copy.deepcopy(self.video_infos[idx])
         results['filename_tmpl'] = self.filename_tmpl
         results['modality'] = self.modality
         results['start_index'] = self.start_index

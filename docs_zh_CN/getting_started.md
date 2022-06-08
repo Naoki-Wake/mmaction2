@@ -4,21 +4,22 @@
 
 <!-- TOC -->
 
-- [数据集](#数据集)
-- [使用预训练模型进行推理](#使用预训练模型进行推理)
-  - [测试某个数据集](#测试某个数据集)
-  - [使用高级 API 对视频和帧文件夹进行测试](#使用高级-API-对视频和帧文件夹进行测试)
-- [如何建立模型](#如何建立模型)
-  - [使用基本组件建立模型](#使用基本组件建立模型)
-  - [构建新模型](#构建新模型)
-- [如何训练模型](#如何训练模型)
-  - [推理流水线](#推理流水线)
-  - [训练配置](#训练配置)
-  - [使用单个 GPU 进行训练](#使用单个-GPU-进行训练)
-  - [使用多个 GPU 进行训练](#使用多个-GPU-进行训练)
-  - [使用多台机器进行训练](#使用多台机器进行训练)
-  - [使用单台机器创建多个任务](#使用单台机器启动多个任务)
-- [详细教程](#详细教程)
+- [基础教程](#%E5%9F%BA%E7%A1%80%E6%95%99%E7%A8%8B)
+  - [数据集](#%E6%95%B0%E6%8D%AE%E9%9B%86)
+  - [使用预训练模型进行推理](#%E4%BD%BF%E7%94%A8%E9%A2%84%E8%AE%AD%E7%BB%83%E6%A8%A1%E5%9E%8B%E8%BF%9B%E8%A1%8C%E6%8E%A8%E7%90%86)
+    - [测试某个数据集](#%E6%B5%8B%E8%AF%95%E6%9F%90%E4%B8%AA%E6%95%B0%E6%8D%AE%E9%9B%86)
+    - [使用高级 API 对视频和帧文件夹进行测试](#%E4%BD%BF%E7%94%A8%E9%AB%98%E7%BA%A7-api-%E5%AF%B9%E8%A7%86%E9%A2%91%E5%92%8C%E5%B8%A7%E6%96%87%E4%BB%B6%E5%A4%B9%E8%BF%9B%E8%A1%8C%E6%B5%8B%E8%AF%95)
+  - [如何建立模型](#%E5%A6%82%E4%BD%95%E5%BB%BA%E7%AB%8B%E6%A8%A1%E5%9E%8B)
+    - [使用基本组件建立模型](#%E4%BD%BF%E7%94%A8%E5%9F%BA%E6%9C%AC%E7%BB%84%E4%BB%B6%E5%BB%BA%E7%AB%8B%E6%A8%A1%E5%9E%8B)
+    - [构建新模型](#%E6%9E%84%E5%BB%BA%E6%96%B0%E6%A8%A1%E5%9E%8B)
+  - [如何训练模型](#%E5%A6%82%E4%BD%95%E8%AE%AD%E7%BB%83%E6%A8%A1%E5%9E%8B)
+    - [推理流水线](#%E6%8E%A8%E7%90%86%E6%B5%81%E6%B0%B4%E7%BA%BF)
+    - [训练配置](#%E8%AE%AD%E7%BB%83%E9%85%8D%E7%BD%AE)
+    - [使用单个 GPU 进行训练](#%E4%BD%BF%E7%94%A8%E5%8D%95%E4%B8%AA-gpu-%E8%BF%9B%E8%A1%8C%E8%AE%AD%E7%BB%83)
+    - [使用多个 GPU 进行训练](#%E4%BD%BF%E7%94%A8%E5%A4%9A%E4%B8%AA-gpu-%E8%BF%9B%E8%A1%8C%E8%AE%AD%E7%BB%83)
+    - [使用多台机器进行训练](#%E4%BD%BF%E7%94%A8%E5%A4%9A%E5%8F%B0%E6%9C%BA%E5%99%A8%E8%BF%9B%E8%A1%8C%E8%AE%AD%E7%BB%83)
+    - [使用单台机器启动多个任务](#%E4%BD%BF%E7%94%A8%E5%8D%95%E5%8F%B0%E6%9C%BA%E5%99%A8%E5%90%AF%E5%8A%A8%E5%A4%9A%E4%B8%AA%E4%BB%BB%E5%8A%A1)
+  - [详细教程](#%E8%AF%A6%E7%BB%86%E6%95%99%E7%A8%8B)
 
 <!-- TOC -->
 
@@ -55,6 +56,9 @@ mmaction2
 MMAction2 提供了一些脚本用于测试数据集（如 Kinetics-400，Something-Something V1&V2，(Multi-)Moments in Time，等），
 并提供了一些高级 API，以便更好地兼容其他项目。
 
+MMAction2 支持仅使用 CPU 进行测试。然而，这样做的速度**非常慢**，用户应仅使用其作为无 GPU 机器上的 debug 手段。
+如需使用 CPU 进行测试，用户需要首先使用命令 `export CUDA_VISIBLE_DEVICES=-1` 禁用机器上的 GPU （如有），然后使用命令 `python tools/test.py {OTHER_ARGS}` 直接调用测试脚本。
+
 ### 测试某个数据集
 
 - [x] 支持单 GPU
@@ -67,7 +71,7 @@ MMAction2 提供了一些脚本用于测试数据集（如 Kinetics-400，Someth
 # 单 GPU 测试
 python tools/test.py ${CONFIG_FILE} ${CHECKPOINT_FILE} [--out ${RESULT_FILE}] [--eval ${EVAL_METRICS}] \
     [--gpu-collect] [--tmpdir ${TMPDIR}] [--options ${OPTIONS}] [--average-clips ${AVG_TYPE}] \
-    [--launcher ${JOB_LAUNCHER}] [--local_rank ${LOCAL_RANK}]
+    [--launcher ${JOB_LAUNCHER}] [--local_rank ${LOCAL_RANK}] [--onnx] [--tensorrt]
 
 # 多 GPU 测试
 ./tools/dist_test.sh ${CONFIG_FILE} ${CHECKPOINT_FILE} ${GPU_NUM} [--out ${RESULT_FILE}] [--eval ${EVAL_METRICS}] \
@@ -85,6 +89,8 @@ python tools/test.py ${CONFIG_FILE} ${CHECKPOINT_FILE} [--out ${RESULT_FILE}] [-
 - `AVG_TYPE`：用于平均测试片段结果的选项。如果被设置为 `prob`，则会在平均测试片段结果之前施加 softmax 函数。否则，会直接进行平均。
 - `JOB_LAUNCHER`：分布式任务初始化启动器选项。可选值有 `none`，`pytorch`，`slurm`，`mpi`。特别地，如果被设置为 `none`, 则会以非分布式模式进行测试。
 - `LOCAL_RANK`：本地 rank 的 ID。如果没有被指定，则会被设置为 0。
+- `--onnx`: 如果指定，将通过 onnx 模型推理获取预测结果，输入参数 `CHECKPOINT_FILE` 应为 onnx 模型文件。Onnx 模型文件由 `/tools/deployment/pytorch2onnx.py` 脚本导出。目前，不支持多 GPU 测试以及动态张量形状（Dynamic shape）。请注意，数据集输出与模型输入张量的形状应保持一致。同时，不建议使用测试时数据增强，如 `ThreeCrop`，`TenCrop`，`twice_sample` 等。
+- `--tensorrt`: 如果指定，将通过 TensorRT 模型推理获取预测结果，输入参数 `CHECKPOINT_FILE` 应为 TensorRT 模型文件。TensorRT 模型文件由导出的 onnx 模型以及 TensorRT 官方模型转换工具生成。目前，不支持多 GPU 测试以及动态张量形状（Dynamic shape）。请注意，数据集输出与模型输入张量的形状应保持一致。同时，不建议使用测试时数据增强，如 `ThreeCrop`，`TenCrop`，`twice_sample` 等。
 
 例子：
 
@@ -92,27 +98,35 @@ python tools/test.py ${CONFIG_FILE} ${CHECKPOINT_FILE} [--out ${RESULT_FILE}] [-
 
 1. 在 Kinetics-400 数据集下测试 TSN （不存储测试结果为文件），并验证 `top-k accuracy` 和 `mean class accuracy` 指标
 
-    ```shell
-    python tools/test.py configs/recognition/tsn/tsn_r50_1x1x3_100e_kinetics400_rgb.py \
-        checkpoints/SOME_CHECKPOINT.pth \
-        --eval top_k_accuracy mean_class_accuracy
-    ```
+   ```shell
+   python tools/test.py configs/recognition/tsn/tsn_r50_1x1x3_100e_kinetics400_rgb.py \
+       checkpoints/SOME_CHECKPOINT.pth \
+       --eval top_k_accuracy mean_class_accuracy
+   ```
 
 2. 使用 8 块 GPU 在 Something-Something V1 下测试 TSN，并验证 `top-k accuracy` 指标
 
-    ```shell
-    ./tools/dist_test.sh configs/recognition/tsn/tsn_r50_1x1x8_50e_sthv1_rgb.py \
-        checkpoints/SOME_CHECKPOINT.pth \
-        8 --out results.pkl --eval top_k_accuracy
-    ```
+   ```shell
+   ./tools/dist_test.sh configs/recognition/tsn/tsn_r50_1x1x8_50e_sthv1_rgb.py \
+       checkpoints/SOME_CHECKPOINT.pth \
+       8 --out results.pkl --eval top_k_accuracy
+   ```
 
 3. 在 slurm 分布式环境中测试 TSN 在 Kinetics-400 数据集下的 `top-k accuracy` 指标
 
-    ```shell
-    python tools/test.py configs/recognition/tsn/tsn_r50_1x1x3_100e_kinetics400_rgb.py \
-        checkpoints/SOME_CHECKPOINT.pth \
-        --launcher slurm --eval top_k_accuracy
-    ```
+   ```shell
+   python tools/test.py configs/recognition/tsn/tsn_r50_1x1x3_100e_kinetics400_rgb.py \
+       checkpoints/SOME_CHECKPOINT.pth \
+       --launcher slurm --eval top_k_accuracy
+   ```
+
+4. 在 Something-Something V1 下测试 onnx 格式的 TSN 模型，并验证 `top-k accuracy` 指标
+
+   ```shell
+   python tools/test.py configs/recognition/tsn/tsn_r50_1x1x3_100e_kinetics400_rgb.py \
+       checkpoints/SOME_CHECKPOINT.onnx \
+       --eval top_k_accuracy --onnx
+   ```
 
 ### 使用高级 API 对视频和帧文件夹进行测试
 
@@ -136,10 +150,14 @@ model = init_recognizer(config_file, checkpoint_file, device=device)
 
 # 测试单个视频并显示其结果
 video = 'demo/demo.mp4'
-labels = 'demo/label_map_k400.txt'
-results = inference_recognizer(model, video, labels)
+labels = 'tools/data/kinetics/label_map_k400.txt'
+results = inference_recognizer(model, video)
 
 # 显示结果
+labels = open('tools/data/kinetics/label_map_k400.txt').readlines()
+labels = [x.strip() for x in labels]
+results = [(labels[k[0]], k[1]) for k in results]
+
 print(f'The top-5 labels with corresponding scores are:')
 for result in results:
     print(f'{result[0]}: ', result[1])
@@ -161,14 +179,18 @@ device = 'cuda:0' # or 'cpu'
 device = torch.device(device)
 
  # 根据配置文件和检查点来建立模型
-model = init_recognizer(config_file, checkpoint_file, device=device, use_frames=True)
+model = init_recognizer(config_file, checkpoint_file, device=device)
 
 # 测试单个视频的帧文件夹并显示其结果
 video = 'SOME_DIR_PATH/'
-labels = 'demo/label_map_k400.txt'
-results = inference_recognizer(model, video, labels, use_frames=True)
+labels = 'tools/data/kinetics/label_map_k400.txt'
+results = inference_recognizer(model, video)
 
 # 显示结果
+labels = open('tools/data/kinetics/label_map_k400.txt').readlines()
+labels = [x.strip() for x in labels]
+results = [(labels[k[0]], k[1]) for k in results]
+
 print(f'The top-5 labels with corresponding scores are:')
 for result in results:
     print(f'{result[0]}: ', result[1])
@@ -181,7 +203,7 @@ import torch
 
 from mmaction.apis import init_recognizer, inference_recognizer
 
-config_file = 'configs/recognition/tsn/tsn_r50_inference_1x1x3_100e_kinetics400_rgb.py'
+config_file = 'configs/recognition/tsn/tsn_r50_video_inference_1x1x3_100e_kinetics400_rgb.py'
 # 从模型库中下载检测点，并把它放到 `checkpoints/` 文件夹下
 checkpoint_file = 'checkpoints/tsn_r50_1x1x3_100e_kinetics400_rgb_20200614-e508be42.pth'
 
@@ -190,14 +212,18 @@ device = 'cuda:0' # or 'cpu'
 device = torch.device(device)
 
  # 根据配置文件和检查点来建立模型
-model = init_recognizer(config_file, checkpoint_file, device=device, use_frames=True)
+model = init_recognizer(config_file, checkpoint_file, device=device)
 
 # 测试单个视频的 url 并显示其结果
 video = 'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4'
-labels = 'demo/label_map_k400.txt'
-results = inference_recognizer(model, video, labels, use_frames=True)
+labels = 'tools/data/kinetics/label_map_k400.txt'
+results = inference_recognizer(model, video)
 
-#  根据配置文件和检查点来建立模型
+# 显示结果
+labels = open('tools/data/kinetics/label_map_k400.txt').readlines()
+labels = [x.strip() for x in labels]
+results = [(labels[k[0]], k[1]) for k in results]
+
 print(f'The top-5 labels with corresponding scores are:')
 for result in results:
     print(f'{result[0]}: ', result[1])
@@ -231,54 +257,54 @@ MMAction2 将模型组件分为 4 种基础模型：
 
 1. 创建 `mmaction/models/backbones/resnet_tsm.py` 文件
 
-    ```python
-    from ..registry import BACKBONES
-    from .resnet import ResNet
+   ```python
+   from ..builder import BACKBONES
+   from .resnet import ResNet
 
-    @BACKBONES.register_module()
-    class ResNetTSM(ResNet):
+   @BACKBONES.register_module()
+   class ResNetTSM(ResNet):
 
-      def __init__(self,
-                   depth,
-                   num_segments=8,
-                   is_shift=True,
-                   shift_div=8,
-                   shift_place='blockres',
-                   temporal_pool=False,
-                   **kwargs):
-          pass
+     def __init__(self,
+                  depth,
+                  num_segments=8,
+                  is_shift=True,
+                  shift_div=8,
+                  shift_place='blockres',
+                  temporal_pool=False,
+                  **kwargs):
+         pass
 
-      def forward(self, x):
-          # implementation is ignored
-          pass
-    ```
+     def forward(self, x):
+         # implementation is ignored
+         pass
+   ```
 
 2. 从 `mmaction/models/backbones/__init__.py` 中导入模型
 
-    ```python
-    from .resnet_tsm import ResNetTSM
-    ```
+   ```python
+   from .resnet_tsm import ResNetTSM
+   ```
 
 3. 修改模型文件
 
-    ```python
-    backbone=dict(
-      type='ResNet',
-      pretrained='torchvision://resnet50',
-      depth=50,
-      norm_eval=False)
-    ```
+   ```python
+   backbone=dict(
+     type='ResNet',
+     pretrained='torchvision://resnet50',
+     depth=50,
+     norm_eval=False)
+   ```
 
    修改为
 
-    ```python
-    backbone=dict(
-        type='ResNetTSM',
-        pretrained='torchvision://resnet50',
-        depth=50,
-        norm_eval=False,
-        shift_div=8)
-    ```
+   ```python
+   backbone=dict(
+       type='ResNetTSM',
+       pretrained='torchvision://resnet50',
+       depth=50,
+       norm_eval=False,
+       shift_div=8)
+   ```
 
 ### 构建新模型
 
@@ -313,6 +339,9 @@ evaluation = dict(interval=5)  # 每 5 个周期进行一次模型评估
 
 根据 [Linear Scaling Rule](https://arxiv.org/abs/1706.02677)，当 GPU 数量或每个 GPU 上的视频批大小改变时，用户可根据批大小按比例地调整学习率，如，当 4 GPUs x 2 video/gpu 时，lr=0.01；当 16 GPUs x 4 video/gpu 时，lr=0.08。
 
+MMAction2 支持仅使用 CPU 进行训练。然而，这样做的速度**非常慢**，用户应仅使用其作为无 GPU 机器上的 debug 手段。
+如需使用 CPU 进行训练，用户需要首先使用命令 `export CUDA_VISIBLE_DEVICES=-1` 禁用机器上的 GPU （如有），然后使用命令 `python tools/train.py {OTHER_ARGS}` 直接调用训练脚本。
+
 ### 使用单个 GPU 进行训练
 
 ```shell
@@ -330,6 +359,8 @@ python tools/train.py ${CONFIG_FILE} [optional arguments]
 可选参数为：
 
 - `--validate` (**强烈建议**)：在训练期间每 k 个周期进行一次验证（默认值为 5，可通过修改每个配置文件中的 `evaluation` 字典变量的 `interval` 值进行改变）。
+- `--test-last`：在训练结束后使用最后一个检查点的参数进行测试，将测试结果存储在 `${WORK_DIR}/last_pred.pkl` 中。
+- `--test-best`：在训练结束后使用效果最好的检查点的参数进行测试，将测试结果存储在 `${WORK_DIR}/best_pred.pkl` 中。
 - `--work-dir ${WORK_DIR}`：覆盖配置文件中指定的工作目录。
 - `--resume-from ${CHECKPOINT_FILE}`：从以前的模型权重文件恢复训练。
 - `--gpus ${GPU_NUM}`：使用的 GPU 数量，仅适用于非分布式训练。
@@ -365,7 +396,21 @@ GPUS=16 ./tools/slurm_train.sh dev tsn_r50_k400 configs/recognition/tsn/tsn_r50_
 
 用户可以查看 [slurm_train.sh](/tools/slurm_train.sh) 文件来检查完整的参数和环境变量。
 
-如果用户的多台机器通过 Ethernet 连接，则可以参考 pytorch [launch utility](https://pytorch.org/docs/stable/distributed.html#launch-utility)。如果用户没有高速网络，如 InfiniBand，速度将会非常慢。
+如果您想使用由 ethernet 连接起来的多台机器， 您可以使用以下命令:
+
+在第一台机器上:
+
+```shell
+NNODES=2 NODE_RANK=0 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR sh tools/dist_train.sh $CONFIG $GPUS
+```
+
+在第二台机器上:
+
+```shell
+NNODES=2 NODE_RANK=1 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR sh tools/dist_train.sh $CONFIG $GPUS
+```
+
+但是，如果您不使用高速网路连接这几台机器的话，训练将会非常慢。
 
 ### 使用单台机器启动多个任务
 

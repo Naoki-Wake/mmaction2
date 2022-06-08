@@ -128,7 +128,7 @@ ann_file_test = 'data/custom/custom_val_list.txt'
 ...
 data = dict(
     videos_per_gpu=32,
-    workers_per_gpu=4,
+    workers_per_gpu=2,
     train=dict(
         type=dataset_type,
         ann_file=ann_file_train,
@@ -170,7 +170,7 @@ import os.path as osp
 import mmcv
 
 from .base import BaseDataset
-from .registry import DATASETS
+from .builder import DATASETS
 
 
 @DATASETS.register_module()
