@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import copy
 import os
 import os.path as osp
@@ -9,7 +10,7 @@ import numpy as np
 
 from ..core import average_recall_at_avg_proposals
 from .base import BaseDataset
-from .registry import DATASETS
+from .builder import DATASETS
 
 
 @DATASETS.register_module()

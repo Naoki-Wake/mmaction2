@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 
 
@@ -21,6 +22,8 @@ def confusion_matrix(y_pred, y_real, normalize=None):
 
     if isinstance(y_pred, list):
         y_pred = np.array(y_pred)
+        if y_pred.dtype == np.int32:
+            y_pred = y_pred.astype(np.int64)
     if not isinstance(y_pred, np.ndarray):
         raise TypeError(
             f'y_pred must be list or np.ndarray, but got {type(y_pred)}')
@@ -30,6 +33,8 @@ def confusion_matrix(y_pred, y_real, normalize=None):
 
     if isinstance(y_real, list):
         y_real = np.array(y_real)
+        if y_real.dtype == np.int32:
+            y_real = y_real.astype(np.int64)
     if not isinstance(y_real, np.ndarray):
         raise TypeError(
             f'y_real must be list or np.ndarray, but got {type(y_real)}')
@@ -85,6 +90,45 @@ def mean_class_accuracy(scores, labels):
         [hit / cnt if cnt else 0.0 for cnt, hit in zip(cls_cnt, cls_hit)])
 
     return mean_class_acc
+
+
+def top_k_classes(scores, labels, k=10, mode='accurate'):
+    """Calculate the most K accurate (inaccurate) classes.
+
+    Given the prediction scores, ground truth label and top-k value,
+    compute the top K accurate (inaccurate) classes.
+
+    Args:
+        scores (list[np.ndarray]): Prediction scores for each class.
+        labels (list[int] | np.ndarray): Ground truth labels.
+        k (int): Top-k values. Default: 10.
+        mode (str): Comparison mode for Top-k. Options are 'accurate'
+            and 'inaccurate'. Default: 'accurate'.
+
+    Return:
+        list: List of sorted (from high accuracy to low accuracy for
+            'accurate' mode, and from low accuracy to high accuracy for
+            inaccurate mode) top K classes in format of (label_id,
+            acc_ratio).
+    """
+    assert mode in ['accurate', 'inaccurate']
+    pred = np.argmax(scores, axis=1)
+    cf_mat = confusion_matrix(pred, labels).astype(float)
+
+    cls_cnt = cf_mat.sum(axis=1)
+    cls_hit = np.diag(cf_mat)
+    hit_ratio = np.array(
+        [hit / cnt if cnt else 0.0 for cnt, hit in zip(cls_cnt, cls_hit)])
+
+    if mode == 'accurate':
+        max_index = np.argsort(hit_ratio)[-k:][::-1]
+        max_value = hit_ratio[max_index]
+        results = list(zip(max_index, max_value))
+    else:
+        min_index = np.argsort(hit_ratio)[:k]
+        min_value = hit_ratio[min_index]
+        results = list(zip(min_index, min_value))
+    return results
 
 
 def top_k_accuracy(scores, labels, topk=(1, )):
@@ -170,7 +214,7 @@ def binary_precision_recall_curve(y_score, y_true):
     Returns:
         precision (np.ndarray): The precision of different thresholds.
         recall (np.ndarray): The recall of different thresholds.
-        thresholds (np.ndarray): Different thresholds at which precison and
+        thresholds (np.ndarray): Different thresholds at which precision and
             recall are tested.
     """
     assert isinstance(y_score, np.ndarray)

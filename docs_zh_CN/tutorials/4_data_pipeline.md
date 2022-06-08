@@ -4,11 +4,12 @@
 
 <!-- TOC -->
 
-- [数据前处理流水线设计](#数据前处理流水线设计)
-  - [数据加载](#数据加载)
-  - [数据预处理](#数据预处理)
-  - [数据格式化](#数据格式化)
-- [扩展和使用自定义流水线](#扩展和使用自定义流水线)
+- [教程 4：如何设计数据处理流程](#%E6%95%99%E7%A8%8B-4%E5%A6%82%E4%BD%95%E8%AE%BE%E8%AE%A1%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B)
+  - [数据前处理流水线设计](#%E6%95%B0%E6%8D%AE%E5%89%8D%E5%A4%84%E7%90%86%E6%B5%81%E6%B0%B4%E7%BA%BF%E8%AE%BE%E8%AE%A1)
+    - [数据加载](#%E6%95%B0%E6%8D%AE%E5%8A%A0%E8%BD%BD)
+    - [数据预处理](#%E6%95%B0%E6%8D%AE%E9%A2%84%E5%A4%84%E7%90%86)
+    - [数据格式化](#%E6%95%B0%E6%8D%AE%E6%A0%BC%E5%BC%8F%E5%8C%96)
+  - [扩展和使用自定义流水线](#%E6%89%A9%E5%B1%95%E5%92%8C%E4%BD%BF%E7%94%A8%E8%87%AA%E5%AE%9A%E4%B9%89%E6%B5%81%E6%B0%B4%E7%BA%BF)
 
 <!-- TOC -->
 
@@ -24,7 +25,7 @@
 我们在下图中展示了一个典型的流水线。 蓝色块是流水线操作。
 随着流水线的深入，每个操作都可以向结果字典添加新键（标记为绿色）或更新现有键（标记为橙色）。
 
-![流水线](../imgs/data_pipeline.png)
+![流水线](https://github.com/open-mmlab/mmaction2/raw/master/resources/data_pipeline.png)
 
 这些操作分为数据加载，数据预处理和数据格式化。
 
@@ -60,7 +61,6 @@ val_pipeline = [
     dict(type='RawFrameDecode', io_backend='disk'),
     dict(type='Resize', scale=(-1, 256)),
     dict(type='CenterCrop', crop_size=224),
-    dict(type='Flip', flip_ratio=0),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='FormatShape', input_format='NCHW'),
     dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
@@ -76,7 +76,6 @@ test_pipeline = [
     dict(type='RawFrameDecode', io_backend='disk'),
     dict(type='Resize', scale=(-1, 256)),
     dict(type='TenCrop', crop_size=224),
-    dict(type='Flip', flip_ratio=0),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='FormatShape', input_format='NCHW'),
     dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
@@ -121,31 +120,31 @@ train_pipeline = [
 
 `SampleFrames`
 
-- 新增: frame_inds, clip_len, frame_interval, num_clips, *total_frames
+- 新增: frame_inds, clip_len, frame_interval, num_clips, \*total_frames
 
 `DenseSampleFrames`
 
-- 新增: frame_inds, clip_len, frame_interval, num_clips, *total_frames
+- 新增: frame_inds, clip_len, frame_interval, num_clips, \*total_frames
 
 `PyAVDecode`
 
 - 新增: imgs, original_shape
-- 更新: *frame_inds
+- 更新: \*frame_inds
 
 `DecordDecode`
 
 - 新增: imgs, original_shape
-- 更新: *frame_inds
+- 更新: \*frame_inds
 
 `OpenCVDecode`
 
 - 新增: imgs, original_shape
-- 更新: *frame_inds
+- 更新: \*frame_inds
 
 `RawFrameDecode`
 
 - 新增: imgs, original_shape
-- 更新: *frame_inds
+- 更新: \*frame_inds
 
 ### 数据预处理
 
@@ -194,11 +193,6 @@ train_pipeline = [
 - 新增: crop_bbox, img_shape
 - 更新: imgs
 
-`MultiGroupCrop`
-
-- 新增: crop_bbox, img_shape
-- 更新: imgs
-
 ### 数据格式化
 
 `ToTensor`
@@ -229,35 +223,35 @@ train_pipeline = [
 
 1. 在任何文件写入一个新的处理流水线，如 `my_pipeline.py`。它以一个字典作为输入并返回一个字典
 
-    ```python
-    from mmaction.datasets import PIPELINES
+   ```python
+   from mmaction.datasets import PIPELINES
 
-    @PIPELINES.register_module()
-    class MyTransform:
+   @PIPELINES.register_module()
+   class MyTransform:
 
-        def __call__(self, results):
-            results['key'] = value
-            return results
-    ```
+       def __call__(self, results):
+           results['key'] = value
+           return results
+   ```
 
 2. 导入新类
 
-    ```python
-    from .my_pipeline import MyTransform
-    ```
+   ```python
+   from .my_pipeline import MyTransform
+   ```
 
 3. 在配置文件使用它
 
-    ```python
-    img_norm_cfg = dict(
-         mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
-    train_pipeline = [
-        dict(type='DenseSampleFrames', clip_len=8, frame_interval=8, num_clips=1),
-        dict(type='RawFrameDecode', io_backend='disk'),
-        dict(type='MyTransform'),       # 使用自定义流水线操作
-        dict(type='Normalize', **img_norm_cfg),
-        dict(type='FormatShape', input_format='NCTHW'),
-        dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
-        dict(type='ToTensor', keys=['imgs', 'label'])
-    ]
-    ```
+   ```python
+   img_norm_cfg = dict(
+        mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+   train_pipeline = [
+       dict(type='DenseSampleFrames', clip_len=8, frame_interval=8, num_clips=1),
+       dict(type='RawFrameDecode', io_backend='disk'),
+       dict(type='MyTransform'),       # 使用自定义流水线操作
+       dict(type='Normalize', **img_norm_cfg),
+       dict(type='FormatShape', input_format='NCTHW'),
+       dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
+       dict(type='ToTensor', keys=['imgs', 'label'])
+   ]
+   ```

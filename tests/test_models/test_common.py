@@ -1,9 +1,15 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import os.path as osp
 
 import pytest
 import torch
+import torch.nn as nn
+from mmcv.utils import assert_params_all_zeros
 
-from mmaction.models.common import LFB, TAM, Conv2plus1d, ConvAudio
+from mmaction.models.common import (LFB, TAM, Conv2plus1d, ConvAudio,
+                                    DividedSpatialAttentionWithNorm,
+                                    DividedTemporalAttentionWithNorm,
+                                    FFNWithNorm, SubBatchNorm3D)
 
 
 def test_conv2plus1d():
@@ -35,6 +41,39 @@ def test_conv_audio():
     conv_audio_sum = ConvAudio(3, 8, 3, op='sum')
     output = conv_audio_sum(x)
     assert output.shape == torch.Size([1, 8, 8, 8])
+
+
+def test_divided_temporal_attention_with_norm():
+    _cfg = dict(embed_dims=768, num_heads=12, num_frames=8)
+    divided_temporal_attention = DividedTemporalAttentionWithNorm(**_cfg)
+    assert isinstance(divided_temporal_attention.norm, nn.LayerNorm)
+    assert assert_params_all_zeros(divided_temporal_attention.temporal_fc)
+
+    x = torch.rand(1, 1 + 8 * 14 * 14, 768)
+    output = divided_temporal_attention(x)
+    assert output.shape == torch.Size([1, 1 + 8 * 14 * 14, 768])
+
+
+def test_divided_spatial_attention_with_norm():
+    _cfg = dict(embed_dims=512, num_heads=8, num_frames=4, dropout_layer=None)
+    divided_spatial_attention = DividedSpatialAttentionWithNorm(**_cfg)
+    assert isinstance(divided_spatial_attention.dropout_layer, nn.Identity)
+    assert isinstance(divided_spatial_attention.norm, nn.LayerNorm)
+
+    x = torch.rand(1, 1 + 4 * 14 * 14, 512)
+    output = divided_spatial_attention(x)
+    assert output.shape == torch.Size([1, 1 + 4 * 14 * 14, 512])
+
+
+def test_ffn_with_norm():
+    _cfg = dict(
+        embed_dims=256, feedforward_channels=256 * 2, norm_cfg=dict(type='LN'))
+    ffn_with_norm = FFNWithNorm(**_cfg)
+    assert isinstance(ffn_with_norm.norm, nn.LayerNorm)
+
+    x = torch.rand(1, 1 + 4 * 14 * 14, 256)
+    output = ffn_with_norm(x)
+    assert output.shape == torch.Size([1, 1 + 4 * 14 * 14, 256])
 
 
 def test_TAM():
@@ -97,3 +136,14 @@ def test_LFB():
         lmdb_map_size=1e6)
     lt_feat_lmdb = lfb_lmdb['video_1,930']
     assert lt_feat_lmdb.shape == (3 * 30, 16)
+
+
+def test_SubBatchNorm3D():
+    _cfg = dict(num_splits=2)
+    num_features = 4
+    sub_batchnorm_3d = SubBatchNorm3D(num_features, **_cfg)
+    assert sub_batchnorm_3d.bn.num_features == num_features
+    assert sub_batchnorm_3d.split_bn.num_features == num_features * 2
+
+    assert sub_batchnorm_3d.bn.affine is False
+    assert sub_batchnorm_3d.split_bn.affine is False

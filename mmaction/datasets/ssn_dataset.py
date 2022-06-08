@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import copy
 import os.path as osp
 import warnings
@@ -12,7 +13,7 @@ from ..localization import (eval_ap, load_localize_proposal_file,
                             perform_regression, temporal_iou, temporal_nms)
 from ..utils import get_root_logger
 from .base import BaseDataset
-from .registry import DATASETS
+from .builder import DATASETS
 
 
 class SSNInstance:
@@ -147,7 +148,7 @@ class SSNDataset(BaseDataset):
         aug_segments (list[int]): Number of segments in starting and
             ending period. Default: (2, 2).
         aug_ratio (int | float | tuple[int | float]): The ratio of the length
-            of augmentation to that of the proposal. Defualt: (0.5, 0.5).
+            of augmentation to that of the proposal. Default: (0.5, 0.5).
         clip_len (int): Frames of each sampled output clip.
             Default: 1.
         frame_interval (int): Temporal interval of adjacent sampled frames.
@@ -488,7 +489,7 @@ class SSNDataset(BaseDataset):
         return eval_results
 
     def construct_proposal_pools(self):
-        """Construct positve proposal pool, incomplete proposal pool and
+        """Construct positive proposal pool, incomplete proposal pool and
         background proposal pool of the entire dataset."""
         for video_info in self.video_infos:
             positives = self.get_positives(
@@ -767,7 +768,7 @@ class SSNDataset(BaseDataset):
         out_proposal_labels = []
         out_proposal_reg_targets = []
 
-        for idx, proposal in enumerate(results['out_proposals']):
+        for _, proposal in enumerate(results['out_proposals']):
             # proposal: [(video_id, SSNInstance), proposal_type]
             num_frames = proposal[0][1].num_video_frames
 

@@ -1,8 +1,9 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch
 import torch.nn as nn
 from mmcv.cnn import normal_init
 
-from ..registry import HEADS
+from ..builder import HEADS
 
 
 def parse_stage_config(stage_cfg):

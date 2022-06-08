@@ -1,3 +1,5 @@
+# Copyright (c) OpenMMLab. All rights reserved.
+import copy as cp
 import io
 import os
 import os.path as osp
@@ -11,7 +13,7 @@ from mmcv.fileio import FileClient
 from torch.nn.modules.utils import _pair
 
 from ...utils import get_random_string, get_shm_dir, get_thread_id
-from ..registry import PIPELINES
+from ..builder import PIPELINES
 
 
 @PIPELINES.register_module()
@@ -56,6 +58,9 @@ class LoadHVULabel:
         category_mask = torch.zeros(self.num_categories)
 
         for category, tags in results['label'].items():
+            # skip if not training on this category
+            if category not in self.categories:
+                continue
             category_mask[self.categories.index(category)] = 1.
             start_idx = self.category2startidx[category]
             category_num = self.category2num[category]
@@ -78,8 +83,8 @@ class LoadHVULabel:
 class SampleFrames:
     """Sample frames from the video.
 
-    Required keys are "filename", "total_frames", "start_index" , added or
-    modified keys are "frame_inds", "frame_interval" and "num_clips".
+    Required keys are "total_frames", "start_index" , added or modified keys
+    are "frame_inds", "frame_interval" and "num_clips".
 
     Args:
         clip_len (int): Frames of each sampled output clip.
@@ -97,8 +102,10 @@ class SampleFrames:
         test_mode (bool): Store True when building test or validation dataset.
             Default: False.
         start_index (None): This argument is deprecated and moved to dataset
-            class (``BaseDataset``, ``VideoDatset``, ``RawframeDataset``, etc),
+            class (``BaseDataset``, ``VideoDataset``, ``RawframeDataset``, etc),
             see this: https://github.com/open-mmlab/mmaction2/pull/89.
+        keep_tail_frames (bool): Whether to keep tail frames when sampling.
+            Default: False.
     """
 
     def __init__(self,
@@ -109,7 +116,8 @@ class SampleFrames:
                  twice_sample=False,
                  out_of_bound_opt='loop',
                  test_mode=False,
-                 start_index=None):
+                 start_index=None,
+                 keep_tail_frames=False):
 
         self.clip_len = clip_len
         self.frame_interval = frame_interval
@@ -118,6 +126,7 @@ class SampleFrames:
         self.twice_sample = twice_sample
         self.out_of_bound_opt = out_of_bound_opt
         self.test_mode = test_mode
+        self.keep_tail_frames = keep_tail_frames
         assert self.out_of_bound_opt in ['loop', 'repeat_last']
 
         if start_index is not None:
@@ -140,21 +149,32 @@ class SampleFrames:
             np.ndarray: Sampled frame indices in train mode.
         """
         ori_clip_len = self.clip_len * self.frame_interval
-        avg_interval = (num_frames - ori_clip_len + 1) // self.num_clips
 
-        if avg_interval > 0:
-            base_offsets = np.arange(self.num_clips) * avg_interval
-            clip_offsets = base_offsets + np.random.randint(
-                avg_interval, size=self.num_clips)
-        elif num_frames > max(self.num_clips, ori_clip_len):
-            clip_offsets = np.sort(
-                np.random.randint(
-                    num_frames - ori_clip_len + 1, size=self.num_clips))
-        elif avg_interval == 0:
-            ratio = (num_frames - ori_clip_len + 1.0) / self.num_clips
-            clip_offsets = np.around(np.arange(self.num_clips) * ratio)
+        if self.keep_tail_frames:
+            avg_interval = (num_frames - ori_clip_len + 1) / float(
+                self.num_clips)
+            if num_frames > ori_clip_len - 1:
+                base_offsets = np.arange(self.num_clips) * avg_interval
+                clip_offsets = (base_offsets + np.random.uniform(
+                    0, avg_interval, self.num_clips)).astype(np.int)
+            else:
+                clip_offsets = np.zeros((self.num_clips, ), dtype=np.int)
         else:
-            clip_offsets = np.zeros((self.num_clips, ), dtype=np.int)
+            avg_interval = (num_frames - ori_clip_len + 1) // self.num_clips
+
+            if avg_interval > 0:
+                base_offsets = np.arange(self.num_clips) * avg_interval
+                clip_offsets = base_offsets + np.random.randint(
+                    avg_interval, size=self.num_clips)
+            elif num_frames > max(self.num_clips, ori_clip_len):
+                clip_offsets = np.sort(
+                    np.random.randint(
+                        num_frames - ori_clip_len + 1, size=self.num_clips))
+            elif avg_interval == 0:
+                ratio = (num_frames - ori_clip_len + 1.0) / self.num_clips
+                clip_offsets = np.around(np.arange(self.num_clips) * ratio)
+            else:
+                clip_offsets = np.zeros((self.num_clips, ), dtype=np.int)
 
         return clip_offsets
 
@@ -262,7 +282,7 @@ class UntrimmedSampleFrames:
         frame_interval (int): Temporal interval of adjacent sampled frames.
             Default: 16.
         start_index (None): This argument is deprecated and moved to dataset
-            class (``BaseDataset``, ``VideoDatset``, ``RawframeDataset``, etc),
+            class (``BaseDataset``, ``VideoDataset``, ``RawframeDataset``, etc),
             see this: https://github.com/open-mmlab/mmaction2/pull/89.
     """
 
@@ -333,21 +353,11 @@ class DenseSampleFrames(SampleFrames):
     """
 
     def __init__(self,
-                 clip_len,
-                 frame_interval=1,
-                 num_clips=1,
+                 *args,
                  sample_range=64,
                  num_sample_positions=10,
-                 temporal_jitter=False,
-                 out_of_bound_opt='loop',
-                 test_mode=False):
-        super().__init__(
-            clip_len,
-            frame_interval,
-            num_clips,
-            temporal_jitter,
-            out_of_bound_opt=out_of_bound_opt,
-            test_mode=test_mode)
+                 **kwargs):
+        super().__init__(*args, **kwargs)
         self.sample_range = sample_range
         self.num_sample_positions = num_sample_positions
 
@@ -422,9 +432,9 @@ class SampleAVAFrames(SampleFrames):
         start = center_index - (self.clip_len // 2) * self.frame_interval
         end = center_index + ((self.clip_len + 1) // 2) * self.frame_interval
         frame_inds = list(range(start, end, self.frame_interval))
-        frame_inds = frame_inds + skip_offsets
+        if not self.test_mode:
+            frame_inds = frame_inds + skip_offsets
         frame_inds = np.clip(frame_inds, shot_info[0], shot_info[1] - 1)
-
         return frame_inds
 
     def __call__(self, results):
@@ -439,8 +449,10 @@ class SampleAVAFrames(SampleFrames):
             -self.frame_interval // 2, (self.frame_interval + 1) // 2,
             size=self.clip_len)
         frame_inds = self._get_clips(center_index, skip_offsets, shot_info)
+        start_index = results.get('start_index', 0)
 
-        results['frame_inds'] = np.array(frame_inds, dtype=np.int)
+        frame_inds = np.array(frame_inds, dtype=np.int) + start_index
+        results['frame_inds'] = frame_inds
         results['clip_len'] = self.clip_len
         results['frame_interval'] = self.frame_interval
         results['num_clips'] = 1
@@ -756,13 +768,13 @@ class PyAVInit:
         return results
 
     def __repr__(self):
-        repr_str = f'{self.__class__.__name__}(io_backend=disk)'
+        repr_str = f'{self.__class__.__name__}(io_backend={self.io_backend})'
         return repr_str
 
 
 @PIPELINES.register_module()
 class PyAVDecode:
-    """Using pyav to decode the video.
+    """Using PyAV to decode the video.
 
     PyAV: https://github.com/mikeboers/PyAV
 
@@ -772,10 +784,26 @@ class PyAVDecode:
     Args:
         multi_thread (bool): If set to True, it will apply multi
             thread processing. Default: False.
+        mode (str): Decoding mode. Options are 'accurate' and 'efficient'.
+            If set to 'accurate', it will decode videos into accurate frames.
+            If set to 'efficient', it will adopt fast seeking but only return
+            the nearest key frames, which may be duplicated and inaccurate,
+            and more suitable for large scene-based video datasets.
+            Default: 'accurate'.
     """
 
-    def __init__(self, multi_thread=False):
+    def __init__(self, multi_thread=False, mode='accurate'):
         self.multi_thread = multi_thread
+        self.mode = mode
+        assert mode in ['accurate', 'efficient']
+
+    @staticmethod
+    def frame_generator(container, stream):
+        """Frame generator for PyAV."""
+        for packet in container.demux(stream):
+            for frame in packet.decode():
+                if frame:
+                    return frame.to_rgb().to_ndarray()
 
     def __call__(self, results):
         """Perform the PyAV decoding.
@@ -792,31 +820,130 @@ class PyAVDecode:
         if results['frame_inds'].ndim != 1:
             results['frame_inds'] = np.squeeze(results['frame_inds'])
 
-        # set max indice to make early stop
-        max_inds = max(results['frame_inds'])
-        i = 0
-        for frame in container.decode(video=0):
-            if i > max_inds + 1:
+        if self.mode == 'accurate':
+            # set max indice to make early stop
+            max_inds = max(results['frame_inds'])
+            i = 0
+            for frame in container.decode(video=0):
+                if i > max_inds + 1:
+                    break
+                imgs.append(frame.to_rgb().to_ndarray())
+                i += 1
+
+            # the available frame in pyav may be less than its length,
+            # which may raise error
+            results['imgs'] = [
+                imgs[i % len(imgs)] for i in results['frame_inds']
+            ]
+        elif self.mode == 'efficient':
+            for frame in container.decode(video=0):
+                backup_frame = frame
                 break
-            imgs.append(frame.to_rgb().to_ndarray())
-            i += 1
-
-        results['video_reader'] = None
-        del container
-
-        # the available frame in pyav may be less than its length,
-        # which may raise error
-        results['imgs'] = [imgs[i % len(imgs)] for i in results['frame_inds']]
-
+            stream = container.streams.video[0]
+            for idx in results['frame_inds']:
+                pts_scale = stream.average_rate * stream.time_base
+                frame_pts = int(idx / pts_scale)
+                container.seek(
+                    frame_pts, any_frame=False, backward=True, stream=stream)
+                frame = self.frame_generator(container, stream)
+                if frame is not None:
+                    imgs.append(frame)
+                    backup_frame = frame
+                else:
+                    imgs.append(backup_frame)
+            results['imgs'] = imgs
         results['original_shape'] = imgs[0].shape[:2]
         results['img_shape'] = imgs[0].shape[:2]
+        results['video_reader'] = None
+        del container
 
         return results
 
     def __repr__(self):
         repr_str = self.__class__.__name__
-        repr_str += f'(multi_thread={self.multi_thread})'
+        repr_str += f'(multi_thread={self.multi_thread}, mode={self.mode})'
         return repr_str
+
+
+@PIPELINES.register_module()
+class PIMSInit:
+    """Use PIMS to initialize the video.
+
+    PIMS: https://github.com/soft-matter/pims
+
+    Args:
+        io_backend (str): io backend where frames are store.
+            Default: 'disk'.
+        mode (str): Decoding mode. Options are 'accurate' and 'efficient'.
+            If set to 'accurate', it will always use ``pims.PyAVReaderIndexed``
+            to decode videos into accurate frames. If set to 'efficient', it
+            will adopt fast seeking by using ``pims.PyAVReaderTimed``.
+            Both will return the accurate frames in most cases.
+            Default: 'accurate'.
+        kwargs (dict): Args for file client.
+    """
+
+    def __init__(self, io_backend='disk', mode='accurate', **kwargs):
+        self.io_backend = io_backend
+        self.kwargs = kwargs
+        self.file_client = None
+        self.mode = mode
+        assert mode in ['accurate', 'efficient']
+
+    def __call__(self, results):
+        try:
+            import pims
+        except ImportError:
+            raise ImportError('Please run "conda install pims -c conda-forge" '
+                              'or "pip install pims" to install pims first.')
+
+        if self.file_client is None:
+            self.file_client = FileClient(self.io_backend, **self.kwargs)
+
+        file_obj = io.BytesIO(self.file_client.get(results['filename']))
+        if self.mode == 'accurate':
+            container = pims.PyAVReaderIndexed(file_obj)
+        else:
+            container = pims.PyAVReaderTimed(file_obj)
+
+        results['video_reader'] = container
+        results['total_frames'] = len(container)
+
+        return results
+
+    def __repr__(self):
+        repr_str = (f'{self.__class__.__name__}(io_backend={self.io_backend}, '
+                    f'mode={self.mode})')
+        return repr_str
+
+
+@PIPELINES.register_module()
+class PIMSDecode:
+    """Using PIMS to decode the videos.
+
+    PIMS: https://github.com/soft-matter/pims
+
+    Required keys are "video_reader" and "frame_inds",
+    added or modified keys are "imgs", "img_shape" and "original_shape".
+    """
+
+    def __call__(self, results):
+        container = results['video_reader']
+
+        if results['frame_inds'].ndim != 1:
+            results['frame_inds'] = np.squeeze(results['frame_inds'])
+
+        frame_inds = results['frame_inds']
+        imgs = [container[idx] for idx in frame_inds]
+
+        results['video_reader'] = None
+        del container
+
+        results['imgs'] = imgs
+        results['original_shape'] = imgs[0].shape[:2]
+        results['img_shape'] = imgs[0].shape[:2]
+
+        return results
 
 
 @PIPELINES.register_module()
@@ -828,10 +955,6 @@ class PyAVDecodeMotionVector(PyAVDecode):
 
     Required keys are "video_reader" and "frame_inds",
     added or modified keys are "motion_vectors", "frame_inds".
-
-    Args:
-        multi_thread (bool): If set to True, it will apply multi
-            thread processing. Default: False.
     """
 
     @staticmethod
@@ -909,6 +1032,12 @@ class DecordInit:
 
     Required keys are "filename",
     added or modified keys are "video_reader" and "total_frames".
+
+    Args:
+        io_backend (str): io backend where frames are store.
+            Default: 'disk'.
+        num_threads (int): Number of thread to decode the video. Default: 1.
+        kwargs (dict): Args for file client.
     """
 
     def __init__(self, io_backend='disk', num_threads=1, **kwargs):
@@ -954,7 +1083,18 @@ class DecordDecode:
 
     Required keys are "video_reader", "filename" and "frame_inds",
     added or modified keys are "imgs" and "original_shape".
+
+    Args:
+        mode (str): Decoding mode. Options are 'accurate' and 'efficient'.
+            If set to 'accurate', it will decode videos into accurate frames.
+            If set to 'efficient', it will adopt fast seeking but only return
+            key frames, which may be duplicated and inaccurate, and more
+            suitable for large scene-based video datasets. Default: 'accurate'.
     """
+
+    def __init__(self, mode='accurate'):
+        self.mode = mode
+        assert mode in ['accurate', 'efficient']
 
     def __call__(self, results):
         """Perform the Decord decoding.
@@ -969,13 +1109,18 @@ class DecordDecode:
             results['frame_inds'] = np.squeeze(results['frame_inds'])
 
         frame_inds = results['frame_inds']
-        # Generate frame index mapping in order
-        frame_dict = {
-            idx: container[idx].asnumpy()
-            for idx in np.unique(frame_inds)
-        }
 
-        imgs = [frame_dict[idx] for idx in frame_inds]
+        if self.mode == 'accurate':
+            imgs = container.get_batch(frame_inds).asnumpy()
+            imgs = list(imgs)
+        elif self.mode == 'efficient':
+            # This mode is faster, however it always returns I-FRAME
+            container.seek(0)
+            imgs = list()
+            for idx in frame_inds:
+                container.seek(idx)
+                frame = container.next()
+                imgs.append(frame.asnumpy())
 
         results['video_reader'] = None
         del container
@@ -986,6 +1131,10 @@ class DecordDecode:
 
         return results
 
+    def __repr__(self):
+        repr_str = f'{self.__class__.__name__}(mode={self.mode})'
+        return repr_str
+
 
 @PIPELINES.register_module()
 class OpenCVInit:
@@ -993,6 +1142,11 @@ class OpenCVInit:
 
     Required keys are "filename", added or modified keys are "new_path",
     "video_reader" and "total_frames".
+
+    Args:
+        io_backend (str): io backend where frames are store.
+            Default: 'disk'.
+        kwargs (dict): Args for file client.
     """
 
     def __init__(self, io_backend='disk', **kwargs):
@@ -1128,7 +1282,19 @@ class RawFrameDecode:
 
         offset = results.get('offset', 0)
 
-        for frame_idx in results['frame_inds']:
+        cache = {}
+        for i, frame_idx in enumerate(results['frame_inds']):
+            # Avoid loading duplicated frames
+            if frame_idx in cache:
+                if modality == 'RGB':
+                    imgs.append(cp.deepcopy(imgs[cache[frame_idx]]))
+                else:
+                    imgs.append(cp.deepcopy(imgs[2 * cache[frame_idx]]))
+                    imgs.append(cp.deepcopy(imgs[2 * cache[frame_idx] + 1]))
+                continue
+            else:
+                cache[frame_idx] = i
+
             frame_idx += offset
             if modality == 'RGB':
                 filepath = osp.join(directory, filename_tmpl.format(frame_idx))
@@ -1173,6 +1339,53 @@ class RawFrameDecode:
                     f'io_backend={self.io_backend}, '
                     f'decoding_backend={self.decoding_backend})')
         return repr_str
+
+
+@PIPELINES.register_module()
+class ArrayDecode:
+    """Load and decode frames with given indices from a 4D array.
+
+    Required keys are "array and "frame_inds", added or modified keys are
+    "imgs", "img_shape" and "original_shape".
+    """
+
+    def __call__(self, results):
+        """Perform the ``RawFrameDecode`` to pick frames given indices.
+
+        Args:
+            results (dict): The resulting dict to be modified and passed
+                to the next transform in pipeline.
+        """
+
+        modality = results['modality']
+        array = results['array']
+
+        imgs = list()
+
+        if results['frame_inds'].ndim != 1:
+            results['frame_inds'] = np.squeeze(results['frame_inds'])
+
+        offset = results.get('offset', 0)
+
+        for i, frame_idx in enumerate(results['frame_inds']):
+
+            frame_idx += offset
+            if modality == 'RGB':
+                imgs.append(array[frame_idx])
+            elif modality == 'Flow':
+                imgs.extend(
+                    [array[frame_idx, ..., 0], array[frame_idx, ..., 1]])
+            else:
+                raise NotImplementedError
+
+        results['imgs'] = imgs
+        results['original_shape'] = imgs[0].shape[:2]
+        results['img_shape'] = imgs[0].shape[:2]
+
+        return results
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}()'
 
 
 @PIPELINES.register_module()
@@ -1422,16 +1635,6 @@ class BuildPseudoClip:
 
 
 @PIPELINES.register_module()
-class FrameSelector(RawFrameDecode):
-    """Deprecated class for ``RawFrameDecode``."""
-
-    def __init__(self, *args, **kwargs):
-        warnings.warn('"FrameSelector" is deprecated, please switch to'
-                      '"RawFrameDecode"')
-        super().__init__(*args, **kwargs)
-
-
-@PIPELINES.register_module()
 class AudioFeatureSelector:
     """Sample the audio feature w.r.t. the frames selected.
 
@@ -1440,7 +1643,7 @@ class AudioFeatureSelector:
 
     Args:
         fixed_length (int): As the features selected by frames sampled may
-            not be extactly the same, `fixed_length` will truncate or pad them
+            not be exactly the same, `fixed_length` will truncate or pad them
             into the same size. Default: 128.
     """
 

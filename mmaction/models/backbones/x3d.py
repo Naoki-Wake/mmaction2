@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import math
 
 import torch.nn as nn
@@ -8,7 +9,7 @@ from mmcv.runner import load_checkpoint
 from mmcv.utils import _BatchNorm
 
 from ...utils import get_root_logger
-from ..registry import BACKBONES
+from ..builder import BACKBONES
 
 
 class SEModule(nn.Module):

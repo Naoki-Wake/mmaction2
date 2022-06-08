@@ -1,6 +1,3 @@
-API Reference
-=============
-
 mmaction.apis
 -------------
 .. automodule:: mmaction.apis
@@ -19,9 +16,9 @@ evaluation
 .. automodule:: mmaction.core.evaluation
     :members:
 
-lr
+scheduler
 ^^
-.. automodule:: mmaction.core.lr
+.. automodule:: mmaction.core.scheduler
     :members:
 
 mmaction.localization

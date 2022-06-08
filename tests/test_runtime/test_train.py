@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import copy
 import tempfile
 from collections import OrderedDict
@@ -9,7 +10,7 @@ from mmcv import Config
 from torch.utils.data import Dataset
 
 from mmaction.apis import train_model
-from mmaction.datasets.registry import DATASETS
+from mmaction.datasets import DATASETS
 
 
 @DATASETS.register_module()
@@ -18,7 +19,8 @@ class ExampleDataset(Dataset):
     def __init__(self, test_mode=False):
         self.test_mode = test_mode
 
-    def evaluate(self, results, logger=None):
+    @staticmethod
+    def evaluate(results, logger=None):
         eval_results = OrderedDict()
         eval_results['acc'] = 1
         return eval_results
@@ -100,15 +102,6 @@ def test_train_model():
         cfg['work_dir'] = tmpdir
         config = Config(cfg)
         train_model(model, dataset, config, validate=True)
-
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # train with Fp16OptimizerHook
-        cfg = copy.deepcopy(_cfg)
-        cfg['work_dir'] = tmpdir
-        cfg['fp16'] = dict(loss_scale=512.)
-        config = Config(cfg)
-        model.fp16_enabled = None
-        train_model(model, dataset, config)
 
     with tempfile.TemporaryDirectory() as tmpdir:
         cfg = copy.deepcopy(_cfg)

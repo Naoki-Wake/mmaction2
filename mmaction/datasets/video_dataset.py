@@ -1,7 +1,8 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import os.path as osp
 
 from .base import BaseDataset
-from .registry import DATASETS
+from .builder import DATASETS
 
 
 @DATASETS.register_module()

@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import glob
 import os
@@ -49,7 +50,8 @@ class AudioTools:
                  sample_rate=16000,
                  num_mels=80,
                  fft_size=1280,
-                 hop_size=320):
+                 hop_size=320,
+                 spectrogram_type='lws'):
         self.frame_rate = frame_rate
         self.sample_rate = sample_rate
         self.silence_threshold = SILENCE_THRESHOLD
@@ -66,12 +68,15 @@ class AudioTools:
         self.allow_clipping_in_normalization = ALLOW_CLIPPING_IN_NORMALIZATION
         self.log_scale_min = LOG_SCALE_MIN
         self.norm_audio = NORM_AUDIO
+        self.spectrogram_type = spectrogram_type
+        assert spectrogram_type in ['lws', 'librosa']
 
     def load_wav(self, path):
         """Load an audio file into numpy array."""
         return librosa.core.load(path, sr=self.sample_rate)[0]
 
-    def audio_normalize(self, samples, desired_rms=0.1, eps=1e-4):
+    @staticmethod
+    def audio_normalize(samples, desired_rms=0.1, eps=1e-4):
         """RMS normalize the audio data."""
         rms = np.maximum(eps, np.sqrt(np.mean(samples**2)))
         samples = samples * (desired_rms / rms)
@@ -101,8 +106,8 @@ class AudioTools:
         if with_phase:
             spectro_phase = np.expand_dims(np.angle(spectro_phase), axis=0)
             return spectro_mag, spectro_phase
-        else:
-            return spectro_mag
+
+        return spectro_mag
 
     def save_wav(self, wav, path):
         """Save the wav to disk."""
@@ -143,7 +148,8 @@ class AudioTools:
 
         return quantized[start:end], mel[start:end, :]
 
-    def start_and_end_indices(self, quantized, silence_threshold=2):
+    @staticmethod
+    def start_and_end_indices(quantized, silence_threshold=2):
         """Trim the audio file when reaches the silence threshold."""
         for start in range(quantized.size):
             if abs(quantized[start] - 127) > silence_threshold:
@@ -180,7 +186,8 @@ class AudioTools:
         """
         return lws.lws(self.fft_size, self.get_hop_size(), mode='speech')
 
-    def lws_num_frames(self, length, fsize, fshift):
+    @staticmethod
+    def lws_num_frames(length, fsize, fshift):
         """Compute number of time frames of lws spectrogram.
 
         Please refer to <https://pypi.org/project/lws/1.2.6/>`_.
@@ -229,7 +236,8 @@ class AudioTools:
         min_level = np.exp(self.min_level_db / 20 * np.log(10))
         return 20 * np.log10(np.maximum(min_level, x))
 
-    def _db_to_amp(self, x):
+    @staticmethod
+    def _db_to_amp(x):
         return np.power(10.0, x * 0.05)
 
     def _normalize(self, S):
@@ -248,9 +256,9 @@ class AudioTools:
         return wav
 
     def audio_to_spectrogram(self, wav):
-        if self.melspectrogram:
+        if self.spectrogram_type == 'lws':
             spectrogram = self.melspectrogram(wav).astype(np.float32).T
-        else:
+        elif self.spectrogram_type == 'librosa':
             spectrogram = self.generate_spectrogram_magphase(wav)
         return spectrogram
 
@@ -282,7 +290,7 @@ if __name__ == '__main__':
     parser.add_argument('audio_home_path', type=str)
     parser.add_argument('spectrogram_save_path', type=str)
     parser.add_argument('--level', type=int, default=1)
-    parser.add_argument('--ext', default='.m4a')
+    parser.add_argument('--ext', default='m4a')
     parser.add_argument('--num-workers', type=int, default=4)
     parser.add_argument('--part', type=str, default='1/1')
     args = parser.parse_args()
@@ -290,7 +298,8 @@ if __name__ == '__main__':
     mmcv.mkdir_or_exist(args.spectrogram_save_path)
 
     files = glob.glob(
-        osp.join(args.audio_home_path, '*/' * args.level, '*' + args.ext))
+        # osp.join(args.audio_home_path, '*/' * args.level, '*' + args.ext)
+        args.audio_home_path + '/*' * args.level + '.' + args.ext)
     print(f'found {len(files)} files.')
     files = sorted(files)
     if args.part is not None:

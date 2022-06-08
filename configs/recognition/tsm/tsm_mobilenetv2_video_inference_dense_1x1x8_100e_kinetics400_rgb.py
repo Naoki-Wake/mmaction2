@@ -17,7 +17,6 @@ test_pipeline = [
     dict(type='DecordDecode'),
     dict(type='Resize', scale=(-1, 256)),
     dict(type='CenterCrop', crop_size=224),
-    dict(type='Flip', flip_ratio=0),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='FormatShape', input_format='NCHW'),
     dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
@@ -26,7 +25,7 @@ test_pipeline = [
 
 data = dict(
     videos_per_gpu=4,
-    workers_per_gpu=4,
+    workers_per_gpu=2,
     test=dict(
         type=dataset_type,
         ann_file=ann_file_test,

@@ -1,4 +1,5 @@
-from ..registry import RECOGNIZERS
+# Copyright (c) OpenMMLab. All rights reserved.
+from ..builder import RECOGNIZERS
 from .base import BaseRecognizer
 
 

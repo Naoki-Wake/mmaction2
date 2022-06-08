@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 import pytest
 from mmcv.utils import assert_dict_has_keys
@@ -9,7 +10,8 @@ from .base import check_flip
 
 class TestAugumentations:
 
-    def test_imgaug(self):
+    @staticmethod
+    def test_imgaug():
 
         with pytest.raises(ValueError):
             # transforms only support one string, 'default'

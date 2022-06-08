@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import math
 
 import numpy as np
@@ -5,14 +6,13 @@ import torch
 import torch.nn as nn
 
 from ...localization import temporal_iop, temporal_iou
-from ..builder import build_loss
-from ..registry import LOCALIZERS
-from .base import BaseLocalizer
+from ..builder import LOCALIZERS, build_loss
+from .base import BaseTAPGenerator
 from .utils import post_processing
 
 
 @LOCALIZERS.register_module()
-class BMN(BaseLocalizer):
+class BMN(BaseTAPGenerator):
     """Boundary Matching Network for temporal action proposal generation.
 
     Please refer `BMN: Boundary-Matching Network for Temporal Action Proposal
@@ -53,7 +53,7 @@ class BMN(BaseLocalizer):
                  hidden_dim_1d=256,
                  hidden_dim_2d=128,
                  hidden_dim_3d=512):
-        super(BaseLocalizer, self).__init__()
+        super().__init__()
 
         self.tscale = temporal_dim
         self.boundary_ratio = boundary_ratio
@@ -158,7 +158,7 @@ class BMN(BaseLocalizer):
         Args:
             tmin_offset (int): Offset for the minimum value of temporal anchor.
                 Default: 0.
-            tmax_offset (int): Offset for the maximun value of temporal anchor.
+            tmax_offset (int): Offset for the maximum value of temporal anchor.
                 Default: 1.
 
         Returns:

@@ -2,7 +2,7 @@
 
 ## 简介
 
-[DATASET]
+<!-- [DATASET] -->
 
 ```BibTeX
 @inproceedings{gu2018ava,
@@ -56,8 +56,6 @@ bash cut_videos.sh
 
 ## 4. 提取 RGB 帧和光流
 
-如果用户仅使用 video loader，则可以跳过本步。
-
 在提取之前，请参考 [安装教程](/docs_zh_CN/install.md) 安装 [denseflow](https://github.com/open-mmlab/denseflow)。
 
 如果用户有足够的 SSD 空间，那么建议将视频抽取为 RGB 帧以提升 I/O 性能。用户可以使用以下脚本为抽取得到的帧文件夹建立软连接：
@@ -68,19 +66,13 @@ mkdir /mnt/SSD/ava_extracted/
 ln -s /mnt/SSD/ava_extracted/ ../data/ava/rawframes/
 ```
 
-如果用户只使用 RGB 帧（由于光流提取非常耗时），可以考虑执行以下脚本，仅用 denseflow 提取 RGB 帧：
+如果用户只使用 RGB 帧（由于光流提取非常耗时），可执行以下脚本使用 denseflow 提取 RGB 帧：
 
 ```shell
 bash extract_rgb_frames.sh
 ```
 
-如果用户未安装 denseflow，以下脚本可以使用 OpenCV 进行 RGB 帧的提取，但视频原分辨率大小会被保留：
-
-```shell
-bash extract_rgb_frames_opencv.sh
-```
-
-或执行以下脚本，使用 ffmpeg 提取 RGB 帧：
+如果用户未安装 denseflow，可执行以下脚本使用 ffmpeg 提取 RGB 帧：
 
 ```shell
 bash extract_rgb_frames_ffmpeg.sh

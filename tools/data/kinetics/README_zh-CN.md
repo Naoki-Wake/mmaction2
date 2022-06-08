@@ -1,8 +1,8 @@
-# 准备 Kinetics-[400/600/700]
+# 准备 Kinetics-\[400/600/700\]
 
 ## 简介
 
-[DATASET]
+<!-- [DATASET] -->
 
 ```BibTeX
 @inproceedings{inproceedings,
@@ -20,8 +20,8 @@
 
 **注**：由于部分 YouTube 链接失效，爬取的 Kinetics 数据集大小可能与原版不同。以下是我们所使用 Kinetics 数据集的大小：
 
-| 数据集 | 训练视频 | 验证集视频 |
-| :-----:|:---------:|:-------:|
+|     数据集     |  训练视频  | 验证集视频 |
+| :---------: | :----: | :---: |
 | kinetics400 | 240436 | 19796 |
 
 ## 1. 准备标注文件
@@ -60,7 +60,7 @@ bash rename_classnames.sh ${DATASET}
 python ../resize_videos.py ../../../data/${DATASET}/videos_train/ ../../../data/${DATASET}/videos_train_256p_dense_cache --dense --level 2
 ```
 
-也可以从 [Academic Torrents](https://academictorrents.com/details/184d11318372f70018cf9a72ef867e2fb9ce1d26) 下载 Kinetics400 和 Kinetics700。
+也可以从 [Academic Torrents](https://academictorrents.com/) 中下载短边长度为 256 的 [kinetics400](https://academictorrents.com/details/184d11318372f70018cf9a72ef867e2fb9ce1d26) 和 [kinetics700](https://academictorrents.com/details/49f203189fb69ae96fb40a6d0e129949e1dfec98)，或从 Common Visual Data Foundation 维护的 [cvdfoundation/kinetics-dataset](https://github.com/cvdfoundation/kinetics-dataset) 中下载 Kinetics400/Kinetics600/Kinetics-700-2020。
 
 ## 3. 提取 RGB 帧和光流
 

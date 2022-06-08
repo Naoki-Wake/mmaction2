@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import multiprocessing
 import os
@@ -44,7 +45,7 @@ def pool_feature(data, num_proposals=100, num_sample_bins=3, pool_type='mean'):
     anchor_size = (end - start) / num_proposals
     ptr = start
     feature = []
-    for i in range(num_proposals):
+    for _ in range(num_proposals):
         x_new = [
             ptr + i / num_sample_bins * anchor_size
             for i in range(num_sample_bins)

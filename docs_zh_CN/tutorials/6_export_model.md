@@ -4,11 +4,11 @@
 
 <!-- TOC -->
 
-- [支持的模型](#支持的模型)
-- [如何使用](#如何使用)
-  - [准备工作](#准备工作)
-  - [行为识别器](#行为识别器)
-  - [时序动作检测器](#时序动作检测器)
+- [支持的模型](#%E6%94%AF%E6%8C%81%E7%9A%84%E6%A8%A1%E5%9E%8B)
+- [如何使用](#%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8)
+  - [准备工作](#%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C)
+  - [行为识别器](#%E8%A1%8C%E4%B8%BA%E8%AF%86%E5%88%AB%E5%99%A8)
+  - [时序动作检测器](#%E6%97%B6%E5%BA%8F%E5%8A%A8%E4%BD%9C%E6%A3%80%E6%B5%8B%E5%99%A8)
 
 <!-- TOC -->
 
@@ -28,7 +28,7 @@
 
 ## 如何使用
 
-对于简单的模型导出，用户可以使用这里的 [脚本](/tools/pytorch2onnx.py)。
+对于简单的模型导出，用户可以使用这里的 [脚本](/tools/deployment/pytorch2onnx.py)。
 注意，需要安装 `onnx` 和 `onnxruntime` 包以进行导出后的验证。
 
 ### 准备工作
@@ -42,7 +42,7 @@ pip install onnx onnxruntime
 MMAction2 提供了一个 python 脚本，用于将 MMAction2 训练的 pytorch 模型导出到 ONNX。
 
 ```shell
-python tools/pytorch2onnx.py ${CONFIG_FILE} ${CHECKPOINT_FILE} [--shape ${SHAPE}] \
+python tools/deployment/pytorch2onnx.py ${CONFIG_FILE} ${CHECKPOINT_FILE} [--shape ${SHAPE}] \
     [--verify] [--show] [--output-file ${OUTPUT_FILE}]  [--is-localizer] [--opset-version ${VERSION}]
 ```
 
@@ -54,13 +54,14 @@ python tools/pytorch2onnx.py ${CONFIG_FILE} ${CHECKPOINT_FILE} [--shape ${SHAPE}
 - `--output-file`: 导出的 onnx 模型名。如果没有被指定，它将被置为 `tmp.onnx`。
 - `--is-localizer`：决定导出的模型是否为时序检测器。如果没有被指定，它将被置为 `False`。
 - `--opset-version`：决定 onnx 的执行版本，MMAction2 推荐用户使用高版本（例如 11 版本）的 onnx 以确保稳定性。如果没有被指定，它将被置为 `11`。
+- `--softmax`: 是否在行为识别器末尾添加 Softmax。如果没有指定，将被置为 `False`。目前仅支持行为识别器，不支持时序动作检测器。
 
 ### 行为识别器
 
 对于行为识别器，可运行：
 
 ```shell
-python tools/pytorch2onnx.py $CONFIG_PATH $CHECKPOINT_PATH --shape $SHAPE --verify
+python tools/deployment/pytorch2onnx.py $CONFIG_PATH $CHECKPOINT_PATH --shape $SHAPE --verify
 ```
 
 ### 时序动作检测器
@@ -68,7 +69,7 @@ python tools/pytorch2onnx.py $CONFIG_PATH $CHECKPOINT_PATH --shape $SHAPE --veri
 对于时序动作检测器，可运行：
 
 ```shell
-python tools/pytorch2onnx.py $CONFIG_PATH $CHECKPOINT_PATH --is-localizer --shape $SHAPE --verify
+python tools/deployment/pytorch2onnx.py $CONFIG_PATH $CHECKPOINT_PATH --is-localizer --shape $SHAPE --verify
 ```
 
 如果发现提供的模型权重文件没有被成功导出，或者存在精度损失，可以在本 repo 下提出问题（issue）。

@@ -1,3 +1,4 @@
-from .tin_lr_hook import TINLrUpdaterHook
+# Copyright (c) OpenMMLab. All rights reserved.
+from .multigridlr import RelativeStepLrUpdaterHook
 
-__all__ = ['TINLrUpdaterHook']
+__all__ = ['RelativeStepLrUpdaterHook']

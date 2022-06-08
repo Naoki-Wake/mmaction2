@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import os.path as osp
 
 import mmcv
@@ -129,7 +130,7 @@ class TestAVADataset:
 
         assert result['filename_tmpl'] == 'img_{:05}.jpg'
         assert result['modality'] == 'RGB'
-        assert result['start_index'] == 1
+        assert result['start_index'] == 0
         assert result['timestamp_start'] == 900
         assert result['timestamp_end'] == 1800
         assert_array_equal(result['proposals'],
@@ -151,11 +152,12 @@ class TestAVADataset:
         result = ava_dataset[0]
         assert result['filename_tmpl'] == 'img_{:05}.jpg'
         assert result['modality'] == 'RGB'
-        assert result['start_index'] == 1
+        assert result['start_index'] == 0
         assert result['timestamp_start'] == 900
         assert result['timestamp_end'] == 1800
 
-    def test_ava_evaluate(self):
+    @staticmethod
+    def test_ava_evaluate():
         data_prefix = osp.normpath(
             osp.join(osp.dirname(__file__), '../../data', 'eval_detection'))
         ann_file = osp.join(data_prefix, 'gt.csv')

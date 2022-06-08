@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import copy
 import os
@@ -7,15 +8,17 @@ import warnings
 
 import mmcv
 import torch
+import torch.distributed as dist
 from mmcv import Config, DictAction
-from mmcv.runner import init_dist, set_random_seed
+from mmcv.runner import get_dist_info, init_dist, set_random_seed
 from mmcv.utils import get_git_hash
 
 from mmaction import __version__
-from mmaction.apis import train_model
+from mmaction.apis import init_random_seed, train_model
 from mmaction.datasets import build_dataset
 from mmaction.models import build_model
-from mmaction.utils import collect_env, get_root_logger, register_module_hooks
+from mmaction.utils import (collect_env, get_root_logger,
+                            register_module_hooks, setup_multi_processes)
 
 
 def parse_args():
@@ -28,6 +31,15 @@ def parse_args():
         '--validate',
         action='store_true',
         help='whether to evaluate the checkpoint during training')
+    parser.add_argument(
+        '--test-last',
+        action='store_true',
+        help='whether to test the checkpoint after training')
+    parser.add_argument(
+        '--test-best',
+        action='store_true',
+        help=('whether to test the best checkpoint (if applicable) after '
+              'training'))
     group_gpus = parser.add_mutually_exclusive_group()
     group_gpus.add_argument(
         '--gpus',
@@ -41,6 +53,10 @@ def parse_args():
         help='ids of gpus to use '
         '(only applicable to non-distributed training)')
     parser.add_argument('--seed', type=int, default=None, help='random seed')
+    parser.add_argument(
+        '--diff-seed',
+        action='store_true',
+        help='Whether or not set different seeds for different ranks')
     parser.add_argument(
         '--deterministic',
         action='store_true',
@@ -73,6 +89,9 @@ def main():
 
     cfg.merge_from_dict(args.cfg_options)
 
+    # set multi-process settings
+    setup_multi_processes(cfg)
+
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
@@ -88,10 +107,21 @@ def main():
                                 osp.splitext(osp.basename(args.config))[0])
     if args.resume_from is not None:
         cfg.resume_from = args.resume_from
-    if args.gpu_ids is not None:
-        cfg.gpu_ids = args.gpu_ids
-    else:
-        cfg.gpu_ids = range(1) if args.gpus is None else range(args.gpus)
+
+    if args.gpu_ids is not None or args.gpus is not None:
+        warnings.warn(
+            'The Args `gpu_ids` and `gpus` are only used in non-distributed '
+            'mode and we highly encourage you to use distributed mode, i.e., '
+            'launch training with dist_train.sh. The two args will be '
+            'deperacted.')
+        if args.gpu_ids is not None:
+            warnings.warn(
+                'Non-distributed training can only use 1 gpu now. We will '
+                'use the 1st one in gpu_ids. ')
+            cfg.gpu_ids = [args.gpu_ids[0]]
+        elif args.gpus is not None:
+            warnings.warn('Non-distributed training can only use 1 gpu now. ')
+            cfg.gpu_ids = range(1)
 
     # init distributed env first, since logger depends on the dist info.
     if args.launcher == 'none':
@@ -99,6 +129,8 @@ def main():
     else:
         distributed = True
         init_dist(args.launcher, **cfg.dist_params)
+        _, world_size = get_dist_info()
+        cfg.gpu_ids = range(world_size)
 
     # The flag is used to determine whether it is omnisource training
     cfg.setdefault('omnisource', False)
@@ -128,15 +160,17 @@ def main():
 
     # log some basic info
     logger.info(f'Distributed training: {distributed}')
-    logger.info(f'Config: {cfg.text}')
+    logger.info(f'Config: {cfg.pretty_text}')
 
     # set random seeds
-    if args.seed is not None:
-        logger.info(f'Set random seed to {args.seed}, '
-                    f'deterministic: {args.deterministic}')
-        set_random_seed(args.seed, deterministic=args.deterministic)
-    cfg.seed = args.seed
-    meta['seed'] = args.seed
+    seed = init_random_seed(args.seed, distributed=distributed)
+    seed = seed + dist.get_rank() if args.diff_seed else seed
+    logger.info(f'Set random seed to {seed}, '
+                f'deterministic: {args.deterministic}')
+    set_random_seed(seed, deterministic=args.deterministic)
+
+    cfg.seed = seed
+    meta['seed'] = seed
     meta['config_name'] = osp.basename(args.config)
     meta['work_dir'] = osp.basename(cfg.work_dir.rstrip('/\\'))
 
@@ -150,13 +184,13 @@ def main():
 
     if cfg.omnisource:
         # If omnisource flag is set, cfg.data.train should be a list
-        assert type(cfg.data.train) is list
+        assert isinstance(cfg.data.train, list)
         datasets = [build_dataset(dataset) for dataset in cfg.data.train]
     else:
         datasets = [build_dataset(cfg.data.train)]
 
     if len(cfg.workflow) == 2:
-        # For simplicity, omnisource is not compatiable with val workflow,
+        # For simplicity, omnisource is not compatible with val workflow,
         # we recommend you to use `--validate`
         assert not cfg.omnisource
         if args.validate:
@@ -170,14 +204,16 @@ def main():
         # checkpoints as meta data
         cfg.checkpoint_config.meta = dict(
             mmaction_version=__version__ + get_git_hash(digits=7),
-            config=cfg.text)
+            config=cfg.pretty_text)
 
+    test_option = dict(test_last=args.test_last, test_best=args.test_best)
     train_model(
         model,
         datasets,
         cfg,
         distributed=distributed,
         validate=args.validate,
+        test=test_option,
         timestamp=timestamp,
         meta=meta)
 

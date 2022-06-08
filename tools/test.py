@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import os
 import os.path as osp
@@ -8,13 +9,23 @@ import torch
 from mmcv import Config, DictAction
 from mmcv.cnn import fuse_conv_bn
 from mmcv.fileio.io import file_handlers
-from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import get_dist_info, init_dist, load_checkpoint
 from mmcv.runner.fp16_utils import wrap_fp16_model
 
 from mmaction.datasets import build_dataloader, build_dataset
 from mmaction.models import build_model
-from mmaction.utils import register_module_hooks
+from mmaction.utils import (build_ddp, build_dp, default_device,
+                            register_module_hooks, setup_multi_processes)
+
+# TODO import test functions from mmcv and delete them from mmaction2
+try:
+    from mmcv.engine import multi_gpu_test, single_gpu_test
+except (ImportError, ModuleNotFoundError):
+    warnings.warn(
+        'DeprecationWarning: single_gpu_test, multi_gpu_test, '
+        'collect_results_cpu, collect_results_gpu from mmaction2 will be '
+        'deprecated. Please install mmcv through master branch.')
+    from mmaction.apis import multi_gpu_test, single_gpu_test
 
 # TODO import test functions from mmcv and delete them from mmaction2
 try:
@@ -156,13 +167,16 @@ def inference_pytorch(args, cfg, distributed, data_loader):
         model = fuse_conv_bn(model)
 
     if not distributed:
-        model = MMDataParallel(model, device_ids=[0])
+        model = build_dp(
+            model, default_device, default_args=dict(device_ids=cfg.gpu_ids))
         outputs = single_gpu_test(model, data_loader)
     else:
-        model = MMDistributedDataParallel(
-            model.cuda(),
-            device_ids=[torch.cuda.current_device()],
-            broadcast_buffers=False)
+        model = build_ddp(
+            model,
+            default_device,
+            default_args=dict(
+                device_ids=[int(os.environ['LOCAL_RANK'])],
+                broadcast_buffers=False))
         outputs = multi_gpu_test(model, data_loader, args.tmpdir,
                                  args.gpu_collect)
 
@@ -177,8 +191,8 @@ def inference_tensorrt(ckpt_path, distributed, data_loader, batch_size):
     assert not distributed, \
         'TensorRT engine inference only supports single gpu mode.'
     import tensorrt as trt
-    from mmcv.tensorrt.tensorrt_utils import (torch_dtype_from_trt,
-                                              torch_device_from_trt)
+    from mmcv.tensorrt.tensorrt_utils import (torch_device_from_trt,
+                                              torch_dtype_from_trt)
 
     # load engine
     with trt.Logger() as logger, trt.Runtime(logger) as runtime:
@@ -272,6 +286,9 @@ def main():
     cfg = Config.fromfile(args.config)
 
     cfg.merge_from_dict(args.cfg_options)
+
+    # set multi-process settings
+    setup_multi_processes(cfg)
 
     # Load output_config from cfg
     output_config = cfg.get('output_config', {})

@@ -1,10 +1,11 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 from abc import ABCMeta, abstractmethod
 
 import torch
 import torch.nn.functional as F
 from torch.distributions.beta import Beta
 
-from .registry import BLENDINGS
+from .builder import BLENDINGS
 
 __all__ = ['BaseMiniBatchBlending', 'MixupBlending', 'CutmixBlending']
 

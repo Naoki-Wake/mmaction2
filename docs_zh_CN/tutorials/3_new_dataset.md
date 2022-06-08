@@ -4,11 +4,11 @@
 
 <!-- TOC -->
 
-- [通过重组数据来自定义数据集](#通过重组数据来自定义数据集)
-  - [将数据集重新组织为现有格式](#将数据集重新组织为现有格式)
-  - [自定义数据集的示例](#自定义数据集的示例)
-- [通过组合已有数据集来自定义数据集](#通过组合已有数据集来自定义数据集)
-  - [重复数据集](#重复数据集)
+- [通过重组数据来自定义数据集](#%E9%80%9A%E8%BF%87%E9%87%8D%E7%BB%84%E6%95%B0%E6%8D%AE%E6%9D%A5%E8%87%AA%E5%AE%9A%E4%B9%89%E6%95%B0%E6%8D%AE%E9%9B%86)
+  - [将数据集重新组织为现有格式](#%E5%B0%86%E6%95%B0%E6%8D%AE%E9%9B%86%E9%87%8D%E6%96%B0%E7%BB%84%E7%BB%87%E4%B8%BA%E7%8E%B0%E6%9C%89%E6%A0%BC%E5%BC%8F)
+  - [自定义数据集的示例](#%E8%87%AA%E5%AE%9A%E4%B9%89%E6%95%B0%E6%8D%AE%E9%9B%86%E7%9A%84%E7%A4%BA%E4%BE%8B)
+- [通过组合已有数据集来自定义数据集](#%E9%80%9A%E8%BF%87%E7%BB%84%E5%90%88%E5%B7%B2%E6%9C%89%E6%95%B0%E6%8D%AE%E9%9B%86%E6%9D%A5%E8%87%AA%E5%AE%9A%E4%B9%89%E6%95%B0%E6%8D%AE%E9%9B%86)
+  - [重复数据集](#%E9%87%8D%E5%A4%8D%E6%95%B0%E6%8D%AE%E9%9B%86)
 
 <!-- TOC -->
 
@@ -123,7 +123,7 @@ ann_file_test = 'data/custom/custom_val_list.txt'
 ...
 data = dict(
     videos_per_gpu=32,
-    workers_per_gpu=4,
+    workers_per_gpu=2,
     train=dict(
         type=dataset_type,
         ann_file=ann_file_train,
@@ -163,7 +163,7 @@ import os.path as osp
 import mmcv
 
 from .base import BaseDataset
-from .registry import DATASETS
+from .builder import DATASETS
 
 
 @DATASETS.register_module()

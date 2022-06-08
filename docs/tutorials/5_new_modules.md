@@ -23,7 +23,7 @@ Assume you want to add an optimizer named as `MyOptimizer`, which has arguments 
 You need to first implement the new optimizer in a file, e.g., in `mmaction/core/optimizer/my_optimizer.py`:
 
 ```python
-from .registry import OPTIMIZERS
+from mmcv.runner import OPTIMIZERS
 from torch.optim import Optimizer
 
 @OPTIMIZERS.register_module()
@@ -115,41 +115,41 @@ Here we show how to develop new components with an example of TSN.
 
 1. Create a new file `mmaction/models/backbones/resnet.py`.
 
-    ```python
-    import torch.nn as nn
+   ```python
+   import torch.nn as nn
 
-    from ..registry import BACKBONES
+   from ..builder import BACKBONES
 
-    @BACKBONES.register_module()
-    class ResNet(nn.Module):
+   @BACKBONES.register_module()
+   class ResNet(nn.Module):
 
-        def __init__(self, arg1, arg2):
-            pass
+       def __init__(self, arg1, arg2):
+           pass
 
-        def forward(self, x):  # should return a tuple
-            pass
+       def forward(self, x):  # should return a tuple
+           pass
 
-        def init_weights(self, pretrained=None):
-            pass
-    ```
+       def init_weights(self, pretrained=None):
+           pass
+   ```
 
 2. Import the module in `mmaction/models/backbones/__init__.py`.
 
-    ```python
-    from .resnet import ResNet
-    ```
+   ```python
+   from .resnet import ResNet
+   ```
 
 3. Use it in your config file.
 
-    ```python
-    model = dict(
-        ...
-        backbone=dict(
-            type='ResNet',
-            arg1=xxx,
-            arg2=xxx),
-    )
-    ```
+   ```python
+   model = dict(
+       ...
+       backbone=dict(
+           type='ResNet',
+           arg1=xxx,
+           arg2=xxx),
+   )
+   ```
 
 ### Add new heads
 
@@ -157,45 +157,45 @@ Here we show how to develop a new head with the example of TSNHead as the follow
 
 1. Create a new file `mmaction/models/heads/tsn_head.py`.
 
-    You can write a new classification head inheriting from [BaseHead](/mmaction/models/heads/base.py),
-    and overwrite `init_weights(self)` and `forward(self, x)` method.
+   You can write a new classification head inheriting from [BaseHead](/mmaction/models/heads/base.py),
+   and overwrite `init_weights(self)` and `forward(self, x)` method.
 
-    ```python
-    from ..registry import HEADS
-    from .base import BaseHead
+   ```python
+   from ..builder import HEADS
+   from .base import BaseHead
 
 
-    @HEADS.register_module()
-    class TSNHead(BaseHead):
+   @HEADS.register_module()
+   class TSNHead(BaseHead):
 
-        def __init__(self, arg1, arg2):
-            pass
+       def __init__(self, arg1, arg2):
+           pass
 
-        def forward(self, x):
-            pass
+       def forward(self, x):
+           pass
 
-        def init_weights(self):
-            pass
-    ```
+       def init_weights(self):
+           pass
+   ```
 
 2. Import the module in `mmaction/models/heads/__init__.py`
 
-    ```python
-    from .tsn_head import TSNHead
-    ```
+   ```python
+   from .tsn_head import TSNHead
+   ```
 
 3. Use it in your config file
 
-    ```python
-    model = dict(
-        ...
-        cls_head=dict(
-            type='TSNHead',
-            num_classes=400,
-            in_channels=2048,
-            arg1=xxx,
-            arg2=xxx),
-    ```
+   ```python
+   model = dict(
+       ...
+       cls_head=dict(
+           type='TSNHead',
+           num_classes=400,
+           in_channels=2048,
+           arg1=xxx,
+           arg2=xxx),
+   ```
 
 ### Add new loss
 
@@ -258,14 +258,14 @@ In the api for [`train.py`](/mmaction/apis/train.py), it will register the learn
 
 So far, the supported updaters can be find in [mmcv](https://github.com/open-mmlab/mmcv/blob/master/mmcv/runner/hooks/lr_updater.py), but if you want to customize a new learning rate updater, you may follow the steps below:
 
-1. First, write your own LrUpdaterHook in `$MMAction2/mmaction/core/lr`. The snippet followed is an example of customized lr updater that uses learning rate based on a specific learning rate ratio: `lrs`, by which the learning rate decreases at each `steps`:
+1. First, write your own LrUpdaterHook in `$MMAction2/mmaction/core/scheduler`. The snippet followed is an example of customized lr updater that uses learning rate based on a specific learning rate ratio: `lrs`, by which the learning rate decreases at each `steps`:
 
 ```python
 @HOOKS.register_module()
 # Register it here
 class RelativeStepLrUpdaterHook(LrUpdaterHook):
     # You should inheritate it from mmcv.LrUpdaterHook
-    def __init__(self, runner, steps, lrs, **kwargs):
+    def __init__(self, steps, lrs, **kwargs):
         super().__init__(**kwargs)
         assert len(steps) == (len(lrs))
         self.steps = steps

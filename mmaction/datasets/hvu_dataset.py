@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import copy
 import os.path as osp
 from collections import OrderedDict
@@ -8,7 +9,7 @@ from mmcv.utils import print_log
 
 from ..core import mean_average_precision
 from .base import BaseDataset
-from .registry import DATASETS
+from .builder import DATASETS
 
 
 @DATASETS.register_module()
