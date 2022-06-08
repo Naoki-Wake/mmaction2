@@ -1,5 +1,4 @@
 #!/bin/bash
-
 docker run --rm \
        --network=host \
        --privileged \
@@ -20,10 +19,11 @@ docker run --rm \
        --volume="/home/ubuntu18/Codes/actionrecognition/mmaction2/tools:/mmaction2/tools" \
        --runtime=nvidia \
        --device /dev/snd:/dev/snd \
-       -e DISPLAY=$DISPLAY \
-       -e QT_X11_NO_MITSHM=1 \
-       -it naoki:mmaction2_actionrecognition
-#xhost +local:docker
+       -it naoki:mmaction2_actionrecognition_2206
+xhost +local:docker
 #--volume="/mnt/hdd/video/household:/mmaction2/data/household" \
 #--volume="/home/ubuntu18/Codes/actionrecognition/mmaction2/work_dirs:/mmaction2/work_dirs" \
 #       --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+#-it naoki:mmaction2_actionrecognition
+#       -e DISPLAY=$DISPLAY \
+#       -e QT_X11_NO_MITSHM=1 \

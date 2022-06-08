@@ -8,16 +8,18 @@ ENV TORCH_CUDA_ARCH_LIST="6.0 6.1 7.0+PTX"
 ENV TORCH_NVCC_FLAGS="-Xfatbin -compress-all"
 ENV CMAKE_PREFIX_PATH="$(dirname $(which conda))/../"
 
+RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
 RUN apt-get update && apt-get install -y git ninja-build libglib2.0-0 libsm6 libxrender-dev libxext6 ffmpeg \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+RUN pip install --upgrade pip setuptools wheel
+RUN pip install opencv-python==4.5.2.52 pyparsing
 # Inserted to use caches
 ENV updated-on 29-March-21
 
 # Install mmcv-full
-RUN pip install mmcv-full==latest -f https://download.openmmlab.com/mmcv/dist/cu101/torch1.6.0/index.html
-
+RUN pip install mmcv-full latest -f https://download.openmmlab.com/mmcv/dist/cu101/torch1.6.0/index.html
 # Install MMAction2
 RUN conda clean --all
 RUN git clone https://github.com/open-mmlab/mmaction2.git /mmaction2
@@ -25,11 +27,10 @@ WORKDIR /mmaction2
 RUN mkdir -p /mmaction2/data
 ENV FORCE_CUDA="1"
 RUN pip install cython --no-cache-dir
-RUN pip install --no-cache-dir -e .
+#RUN pip install --no-cache-dir -e .
 
 # Install other modules
 RUN apt-get update && apt-get install -y imagemagick
 RUN pip install decord
 RUN pip install moviepy==1.0.3
-RUN pip install scikit-image
-RUN pip install pandas
+RUN pip install --no-cache-dir -e .
