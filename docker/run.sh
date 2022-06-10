@@ -2,6 +2,7 @@
 docker run --rm \
        --network=host \
        --privileged \
+       --gpus all \
        --volume="/dev:/dev" \
        --volume="/mnt/ssd_2T/video/sthv2:/mmaction2/data/sthv2" \
        --volume="/mnt/ssd_2T/video/household:/mmaction2/data/household" \
@@ -17,10 +18,9 @@ docker run --rm \
        --volume="/home/ubuntu18/Codes/actionrecognition/mmaction2/imagemagick_config:/etc/ImageMagick-6" \
        --volume="/home/ubuntu18/Codes/actionrecognition/mmaction2/demo:/mmaction2/demo" \
        --volume="/home/ubuntu18/Codes/actionrecognition/mmaction2/tools:/mmaction2/tools" \
-       --runtime=nvidia \
        --device /dev/snd:/dev/snd \
-       -it naoki:mmaction2_actionrecognition_2206
-xhost +local:docker
+       -it naoki:mmaction2_2206
+
 #--volume="/mnt/hdd/video/household:/mmaction2/data/household" \
 #--volume="/home/ubuntu18/Codes/actionrecognition/mmaction2/work_dirs:/mmaction2/work_dirs" \
 #       --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
