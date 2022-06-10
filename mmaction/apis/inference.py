@@ -53,7 +53,7 @@ def init_recognizer(config, checkpoint=None, device='cuda:0', **kwargs):
     return model
 
 
-def inference_recognizer(model, video, outputs=None, as_tensor=True, **kwargs):
+def inference_recognizer(model, video, outputs=None, as_tensor=True, all_label=False, **kwargs):
     """Inference a video with the recognizer.
 
     Args:
@@ -187,6 +187,11 @@ def inference_recognizer(model, video, outputs=None, as_tensor=True, **kwargs):
     score_sorted = sorted(score_tuples, key=itemgetter(1), reverse=True)
 
     top5_label = score_sorted[:5]
+    if all_label:
+        if outputs:
+            return score_sorted, returned_features
+        return score_sorted
+        
     if outputs:
         return top5_label, returned_features
     return top5_label
