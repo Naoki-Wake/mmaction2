@@ -182,12 +182,12 @@ def inference(fp_video, output_flag=False):
         return results, fp_out_filename
     return results, None
 @app.post("/uploadfile/")
-async def create_upload_file(video: UploadFile = File(None)):
-    print(video.filename)
-    if not ('.avi' in video.filename) and (not '.mp4' in video.filename):
+async def create_upload_file(upload_file: UploadFile = File(None)):
+    print(upload_file.filename)
+    if not ('.avi' in upload_file.filename) and (not '.mp4' in upload_file.filename):
         return {"detail": "upload data shoulb be avi or mp4"}
 
-    video_file_path = save_upload_file_to_tmp(video)
+    video_file_path = save_upload_file_to_tmp(upload_file)
     # check time to process
     start_time = time.time()
     results, fp_out_video = inference(str(video_file_path))
