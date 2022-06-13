@@ -145,12 +145,10 @@ def get_output(video_path,
     else:
         video_clips.write_videofile(out_filename, remove_temp=True)
 
-def inference(fp_video, output_flag=False):
-    # e.g. use ('backbone', ) to return backbone feature
-    output_layer_names = None
-
+def inference(fp_video, output_flag=False, output_layer_names=None):
+    returned_feature = None
     # test a single video or rawframes of a single video
-    if output_layer_names:
+    if output_layer_names is not None:
         results, returned_feature = inference_recognizer(
             model, fp_video, outputs=output_layer_names, all_label=True)
     else:
@@ -179,20 +177,23 @@ def inference(fp_video, output_flag=False):
             results[0][0],
             fps=fps,
             target_resolution=target_resolution)
-        return results, fp_out_filename
-    return results, None
+        return results, fp_out_filename, returned_feature
+    return results, None, returned_feature
 @app.post("/uploadfile/")
 async def create_upload_file(upload_file: UploadFile = File(None)):
     print(upload_file.filename)
     if not ('.avi' in upload_file.filename) and (not '.mp4' in upload_file.filename):
         return {"detail": "upload data shoulb be avi or mp4"}
-
     video_file_path = save_upload_file_to_tmp(upload_file)
     # check time to process
     start_time = time.time()
-    results, fp_out_video = inference(str(video_file_path))
+    # e.g. use ('backbone', ) to return backbone feature
+    output_layer_names = 'cls_head'
+    results, fp_out_video, returned_feature = inference(str(video_file_path), output_layer_names=output_layer_names)
+    returned_feature = returned_feature['cls_head'].tolist()[0]
     end_time = time.time()
     print(f'Time to process: {end_time - start_time}')
+
     # remove the tmp file
     os.remove(video_file_path)
     if fp_out_video is not None:
@@ -201,4 +202,6 @@ async def create_upload_file(upload_file: UploadFile = File(None)):
     info_frame = {}
     for i, item in enumerate(results):
         info_frame['top_'+str(i)] = {"label": item[0], "score": str(item[1])}
+    if returned_feature is not None:
+        info_frame['feature'] = returned_feature
     return JSONResponse(content=jsonable_encoder(info_frame))
