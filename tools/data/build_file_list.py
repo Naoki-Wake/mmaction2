@@ -14,7 +14,7 @@ from tools.data.parse_file_list import (parse_directory, parse_diving48_splits,
                                         parse_kinetics_splits,
                                         parse_mit_splits, parse_mmit_splits,
                                         parse_sthv1_splits, parse_sthv2_splits,
-                                        parse_household_splits, parse_sthv2_pretrain_splits,
+                                        parse_household_splits, parse_breakfast_splits, parse_sthv2_pretrain_splits,
                                         parse_ucf101_splits)
 
 
@@ -25,7 +25,7 @@ def parse_args():
         type=str,
         choices=[
             'ucf101', 'kinetics400', 'kinetics600', 'kinetics700', 'thumos14',
-            'sthv1', 'sthv2', 'mit', 'mmit', 'activitynet', 'hmdb51', 'jester', 'household', 'sthv2_pretrain','diving48'
+            'sthv1', 'sthv2', 'mit', 'mmit', 'activitynet', 'hmdb51', 'jester', 'household', 'breakfast', 'sthv2_pretrain','diving48'
         ],
         help='dataset to be built file list')
     parser.add_argument(
@@ -57,7 +57,7 @@ def parse_args():
         '--level',
         type=int,
         default=2,
-        choices=[1, 2],
+        choices=[1, 2, -1],
         help='directory level of data')
     parser.add_argument(
         '--format',
@@ -112,8 +112,12 @@ def build_file_list(splits, frame_info, shuffle=False, mode = None):
                 generated file list for rgb, flow_list is the generated
                 file list for flow.
         """
+        #import pdb;pdb.set_trace()
         rgb_list, flow_list = list(), list()
         for item in split:
+            if item[0].endswith('.mp4'):
+                #item[0] = osp.splitext(item[0])[0]
+                item = (osp.splitext(item[0])[0], item[1])
             if item[0] not in frame_info:
                 continue
             if frame_info[item[0]][1] > 0:
@@ -160,7 +164,7 @@ def build_file_list(splits, frame_info, shuffle=False, mode = None):
     train_rgb_list, train_flow_list = build_list(splits[0])
     valid_rgb_list, valid_flow_list = build_list(splits[1])
     #import pdb;pdb.set_trace()
-    if mode == 'household':
+    if mode == 'household' or mode == 'breakfast':
         test_rgb_list, test_flow_list = build_list(splits[2])
         return (train_rgb_list, valid_rgb_list, test_rgb_list), (train_flow_list, valid_flow_list, test_flow_list)
     else:
@@ -188,10 +192,13 @@ def main():
         elif args.level == 2:
             # search for two-level directory
             video_list = glob.glob(osp.join(args.src_folder, '*', '*'))
+        elif args.level == -1:
+            video_list = glob.glob(osp.join(args.src_folder, '**', '*.mp4'), recursive=True)
         else:
-            raise ValueError(f'level must be 1 or 2, but got {args.level}')
+            raise ValueError(f'level must be 1 or 2, -1, but got {args.level}')
         frame_info = {}
         for video in video_list:
+            #import pdb; pdb.set_trace()
             video_path = osp.relpath(video, args.src_folder)
             # video_id: (video_relative_path, -1, -1)
             frame_info[osp.splitext(video_path)[0]] = (video_path, -1, -1)
@@ -208,6 +215,8 @@ def main():
         splits = parse_sthv2_pretrain_splits(args.level)
     elif args.dataset == 'household':
         splits = parse_household_splits(args.level)
+    elif args.dataset == 'breakfast':
+        splits = parse_breakfast_splits(args.level)
     elif args.dataset == 'mit':
         splits = parse_mit_splits()
     elif args.dataset == 'mmit':
@@ -223,14 +232,17 @@ def main():
     else:
         raise ValueError(
             f"Supported datasets are 'ucf101, sthv1, sthv2', 'jester', "
-            f"'mmit', 'mit', 'kinetics400', 'kinetics600', 'kinetics700', 'household', 'sthv2_pretrain', but "
+            f"'mmit', 'mit', 'kinetics400', 'kinetics600', 'kinetics700', 'household', 'breakfast', 'sthv2_pretrain', but "
             f'got {args.dataset}')
 
     assert len(splits) == args.num_split
 
     out_path = args.out_root_path + args.dataset
+    #import pdb; pdb.set_trace()
     if args.dataset == 'sthv2_pretrain':
         out_path = args.out_root_path + 'sthv2'
+    if args.dataset == 'breakfast':
+        out_path = out_path + '/annotations'
     if len(splits) > 1:
         for i, split in enumerate(splits):
             file_lists = build_file_list(
@@ -253,7 +265,7 @@ def main():
                     json.dump(val_list, f)
     else:
         lists = build_file_list(splits[0], frame_info, shuffle=args.shuffle, mode = args.dataset)
-
+        #import pdb;pdb.set_trace()
         if args.subset == 'train':
             ind = 0
         elif args.subset == 'val':

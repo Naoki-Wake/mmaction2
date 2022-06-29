@@ -397,6 +397,64 @@ def parse_household_splits(level):
     splits = ((train_list, val_list, test_list), )
     return splits
 
+
+def parse_breakfast_splits(level):
+    """Parse household dataset V2 into "train", "val" splits.
+
+    Args:
+        level (int): Directory level of data. 1 for the single-level directory,
+            2 for the two-level directory.
+
+    Returns:
+        list: "train", "val", "test" splits of household V2 dataset.
+    """
+    # Read the annotations
+    # yapf: disable
+    class_index_file = 'data/breakfast/annotations/breakfast-labels.json'  # noqa
+    # yapf: enable
+    train_file = 'data/breakfast/annotations/breakfast-train.json'
+    val_file = 'data/breakfast/annotations/breakfast-validation.json'
+    test_file = 'data/breakfast/annotations/breakfast-test.json'
+
+    with open(class_index_file, 'r') as fin:
+        class_mapping = json.loads(fin.read())
+
+    def line_to_map(item, test_mode=False):
+        #import pdb;pdb.set_trace()
+        try:
+            video = item['id']
+        except KeyError:
+            print(item)
+            import pdb;pdb.set_trace()
+        if level == 1:
+            video = osp.basename(video)
+        elif level == 2:
+            video = osp.join(
+                osp.basename(osp.dirname(video)), osp.basename(video))
+        else:
+            pass
+        if test_mode:
+            return video
+        else:
+            label = int(class_mapping[item['label']])
+            return video, label
+
+    with open(train_file, 'r') as fin:
+        items = json.loads(fin.read())
+        train_list = [line_to_map(item) for item in items]
+
+    with open(val_file, 'r') as fin:
+        items = json.loads(fin.read())
+        val_list = [line_to_map(item) for item in items]
+
+    with open(test_file, 'r') as fin:
+        items = json.loads(fin.read())
+        #test_list = [line_to_map(item, test_mode=True) for item in items]
+        test_list = [line_to_map(item) for item in items]
+
+    splits = ((train_list, val_list, test_list), )
+    return splits
+
 def parse_mmit_splits():
     """Parse Multi-Moments in Time dataset into "train", "val" splits.
 

@@ -41,3 +41,4 @@ RUN pip install fastapi
 RUN pip install pybsc
 RUN pip install uvicorn
 RUN pip install python-multipart
+RUN pip install seaborn

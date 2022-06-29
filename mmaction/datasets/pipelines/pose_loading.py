@@ -46,7 +46,8 @@ class UniformSampleFrames:
             clip_len (int): The length of the clip.
         """
 
-        assert self.num_clips == 1
+        #assert self.num_clips == 1
+
         if num_frames < clip_len:
             start = np.random.randint(0, num_frames)
             inds = np.arange(start, start + clip_len)
