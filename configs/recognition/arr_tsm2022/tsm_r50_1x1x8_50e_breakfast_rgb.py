@@ -6,7 +6,7 @@ _base_ = [
     '../../_base_/default_runtime.py'
 ]
 # model settings
-model = dict(cls_head=dict(num_classes=26))#174
+model = dict(cls_head=dict(num_classes=26))#26
 load_from = '/mmaction2/pretrained_models/tsm_r50_256h_1x1x8_50e_sthv2_rgb_20210816-032aa4da.pth'
 # dataset settings
 #dataset_type = 'VideoDataset'
@@ -18,7 +18,7 @@ load_from = '/mmaction2/pretrained_models/tsm_r50_256h_1x1x8_50e_sthv2_rgb_20210
 dataset_type = 'VideoDataset'
 data_root = 'data/breakfast/videos'
 data_root_val = 'data/breakfast/videos'
-ann_file_train = 'data/breakfast/annotations/wo_pseudo/breakfast_train_list_videos.txt'
+ann_file_train = 'data/breakfast/annotations/wo_pseudo/breakfast_train_list_videos.txt'# with_pseudo_largedatanum
 ann_file_val = 'data/breakfast/annotations/wo_pseudo/breakfast_val_list_videos.txt'
 ann_file_test = 'data/breakfast/annotations/wo_pseudo/breakfast_test_list_videos.txt'
 img_norm_cfg = dict(
@@ -69,7 +69,7 @@ test_pipeline = [
     dict(type='ToTensor', keys=['imgs'])
 ]
 data = dict(
-    videos_per_gpu=4,#6
+    videos_per_gpu=6,#6
     workers_per_gpu=4,#4
     train=dict(
         type=dataset_type,
@@ -95,4 +95,4 @@ optimizer = dict(
     weight_decay=0.0005)
 
 # runtime settings
-work_dir = './work_dirs/experiment20220628_wo_pseudo_onlyheader/'
+work_dir = './work_dirs/experiment20220628_with_pseudo_largedatanum_onlyheader/'

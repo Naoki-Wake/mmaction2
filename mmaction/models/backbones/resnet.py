@@ -499,8 +499,8 @@ class ResNet(nn.Module):
                                        original_conv_name, loaded_param_names)
                 self._load_bn_params(module.bn, state_dict_torchvision,
                                      original_bn_name, loaded_param_names)
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         # check if any parameters in the 2d checkpoint are not loaded
         remaining_names = set(
             state_dict_torchvision.keys()) - set(loaded_param_names)
