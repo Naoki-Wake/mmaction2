@@ -46,14 +46,14 @@ if __name__ == '__main__':
     cfg.dump(fp_config_out)
 
     train_command = str(osp.join(args.dir_root, "tools/dist_train_onlyheader.sh")) + \
-        fp_config_out + " 1 --validate --seed 0 --deterministic --gpu-ids 0"
+        + " " + fp_config_out + " 1 --validate --seed 0 --deterministic --gpu-ids 0"
     import subprocess
     print(train_command)
     #subprocess.run([train_command], shell=True)
 #
-    #test_command = mmaction_root + "/tools/test_several.py " + fp_config_next + " " + osp.join(
-    #    dir_workdir_next,
-    #    'epoch_50.pth') + " --eval top_k_accuracy mean_class_accuracy --out " + osp.join(
-    #    dir_workdir_next,
-    #    'test_result.json')
-    #print(test_command)
+    test_command = str(osp.join(args.dir_root, "/tools/test_several.py")) + " " + fp_config_out + " " + osp.join(
+        osp.join(args.work_dir_root,args.work_dir_name),
+        'epoch_0.pth') + " --eval top_k_accuracy mean_class_accuracy --out " + osp.join(
+        osp.join(args.work_dir_root,args.work_dir_name),
+        'test_result.json')
+    print(test_command)
