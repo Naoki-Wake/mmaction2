@@ -10,7 +10,7 @@ import argparse
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run breakfast')
     parser.add_argument('--dir-root', default='/tmp/repo', type=str)
-    parser.add_argument('--config', default='/configs/recognition/arr_tsm2022/tsm_r50_1x1x8_50e_breakfast_rgb.py', type=str)
+    parser.add_argument('--config', default='configs/recognition/arr_tsm2022/tsm_r50_1x1x8_50e_breakfast_rgb.py', type=str)
     parser.add_argument('--load-from', default='/lfovision_sthv2_breakgast/pretrained_models/tsm_r50_256h_1x1x8_50e_sthv2_rgb_20210816-032aa4da.pth', type=str)
     parser.add_argument('--work-dir-root', default='/lfovision_log/tsm_learningrate/', type=str)
     parser.add_argument('--work-dir-name', default='debug', type=str)
@@ -20,7 +20,7 @@ if __name__ == '__main__':
     # ----settings-----
     fp_config_out = '/tmp/config.py'
     cfg = Config.fromfile(osp.join(args.dir_root,args.config))
-    cfg_options = {'work_dir': args.work_dir,
+    cfg_options = {'work_dir': osp.join(args.work_dir,args.work_dir_name),
                    'data.train.ann_file': osp.join(args.train_file_dir, 'breakfast_train_list_videos.txt'),
                    'data.val.ann_file': osp.join(args.train_file_dir, 'breakfast_val_list_videos.txt'),
                    'data.test.ann_file': osp.join(args.train_file_dir, 'breakfast_test_list_videos.txt'),
