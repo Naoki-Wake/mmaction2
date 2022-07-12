@@ -16,6 +16,11 @@ if __name__ == '__main__':
     parser.add_argument('--work-dir-name', default='debug', type=str)
     parser.add_argument('--train-file-dir', default='/lfovision_sthv2_breakgast/annotations/with_pseudo_largedatanum/', type=str)
     parser.add_argument('--dir-videos-root', default='/lfovision_sthv2_breakgast/', type=str)
+    parser.add_argument('--videos-per-gpu', default=6, type=int)
+    parser.add_argument('--workers-per-gpu', default=4, type=int)
+    parser.add_argument('--lr', default=0.0075, type=float)
+    parser.add_argument('--weight_decay', default=0.0005, type=float)
+
     args = parser.parse_args()
     # ----settings-----
     fp_config_out = '/tmp/config.py'
