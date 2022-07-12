@@ -6,7 +6,7 @@ _base_ = [
     '../../_base_/default_runtime.py'
 ]
 # model settings
-model = dict(cls_head=dict(num_classes=26))#26
+model = dict(cls_head=dict(num_classes=11))#26
 load_from = '/mmaction2/pretrained_models/tsm_r50_256h_1x1x8_50e_sthv2_rgb_20210816-032aa4da.pth'
 # dataset settings
 #dataset_type = 'VideoDataset'
