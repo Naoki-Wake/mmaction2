@@ -1,34 +1,47 @@
 from mmcv import Config, DictAction
+from numpy import argsort
 from mmaction.apis import inference_recognizer, init_recognizer
 import os.path as osp
 import os
 import time
 from glob import glob
-
+import argparse
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Run breakfast')
+    parser.add_argument('--dir-root', default='/tmp/repo', type=str)
+    parser.add_argument('--config', default='/configs/recognition/arr_tsm2022/tsm_r50_1x1x8_50e_breakfast_rgb.py', type=str)
+    parser.add_argument('--load-from', default='/lfovision_sthv2_breakgast/pretrained_models/tsm_r50_256h_1x1x8_50e_sthv2_rgb_20210816-032aa4da.pth', type=str)
+    parser.add_argument('--work-dir-root', default='/lfovision_log/tsm_learningrate/', type=str)
+    parser.add_argument('--work-dir-name', default='debug', type=str)
+    parser.add_argument('--train-file-dir', default='/lfovision_sthv2_breakgast/annotations/with_pseudo_largedatanum/', type=str)
+    parser.add_argument('--dir-videos-root', default='/lfovision_sthv2_breakgast/', type=str)
+    args = parser.parse_args()
     # ----settings-----
-    fp_config = 'mmaction2/configs/recognition/arr_tsm2022/tsm_r50_1x1x8_50e_breakfast_rgb.py'
-    fp_config_out = 'mmaction2/tmp/config.py'
-    cfg = Config.fromfile(fp_config)
-    cfg_options = {'work_dir': dir_workdir_next,
-                   'data.train.ann_file': train_data_next_mixed,
-                   'data.val.ann_file': val_data,
-                   'data.test.ann_file': test_data,
-                   'data.train.data_prefix': dir_videos_root,
-                   'data.val.data_prefix': dir_videos_root,
-                   'data.test.data_prefix': dir_videos_root,
-                   'load_from': fp_checkpoint_current,
-                   'data_root': dir_videos_root,
-                   'data_root_val': dir_videos_root,
-                   'ann_file_train': train_data_next_mixed,
-                   'ann_file_val': val_data,
-                   'ann_file_test': test_data, }
+    fp_config_out = '/tmp/config.py'
+    cfg = Config.fromfile(osp.join(args.dir_root,args.config))
+    cfg_options = {'work_dir': args.work_dir,
+                   'data.train.ann_file': osp.join(args.train_file_dir, 'breakfast_train_list_videos.txt'),
+                   'data.val.ann_file': osp.join(args.train_file_dir, 'breakfast_val_list_videos.txt'),
+                   'data.test.ann_file': osp.join(args.train_file_dir, 'breakfast_test_list_videos.txt'),
+                   'data.train.data_prefix': args.dir_videos_root,
+                   'data.val.data_prefix': args.dir_videos_root,
+                   'data.test.data_prefix': args.dir_videos_root,
+                   'load_from': args.load_from,
+                   'data_root': args.dir_videos_root,
+                   'data_root_val': args.dir_videos_root,
+                   'ann_file_train': osp.join(args.train_file_dir, 'breakfast_train_list_videos.txt'),
+                   'ann_file_val': osp.join(args.train_file_dir, 'breakfast_val_list_videos.txt'),
+                   'ann_file_test': osp.join(args.train_file_dir, 'breakfast_test_list_videos.txt'), 
+                   'data.videos_per_gpu': args.videos_per_gpu,
+                   'data.workers_per_gpu': args.workers_per_gpu,
+                   'optimizer.lr': args.lr,
+                   'optimizer.weight_decay': args.weight_decay,}
     cfg.merge_from_dict(cfg_options)
-    cfg.dump(fp_config_next)
+    cfg.dump(fp_config_out)
 
-    train_command = mmaction_root + "/tools/dist_train_onlyheader.sh " + \
-        fp_config_next + " 1 --validate --seed 0 --deterministic --gpu-ids 0"
+    train_command = str(osp.join(args.dir_root, "/tools/dist_train_onlyheader.sh")) + \
+        fp_config_out + " 1 --validate --seed 0 --deterministic --gpu-ids 0"
     import subprocess
     print(train_command)
     #subprocess.run([train_command], shell=True)
