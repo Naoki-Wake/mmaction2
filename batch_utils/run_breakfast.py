@@ -44,8 +44,7 @@ if __name__ == '__main__':
                    'data.videos_per_gpu': args.videos_per_gpu,
                    'data.workers_per_gpu': args.workers_per_gpu,
                    'optimizer.lr': args.lr,
-                   'optimizer.weight_decay': args.weight_decay,
-                   'optimizer.momentum': args.momentum,}
+                   'optimizer.weight_decay': args.weight_decay}
     cfg.merge_from_dict(cfg_options)
     cfg.dump(fp_config_out)
 
