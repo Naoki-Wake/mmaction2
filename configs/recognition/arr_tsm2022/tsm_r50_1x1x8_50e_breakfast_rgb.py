@@ -94,8 +94,7 @@ evaluation = dict(
 # optimizer
 optimizer = dict(
     lr=0.0075,  # this lr is used for 8 gpus
-    weight_decay=0.0005,
-    momentum=0.9)
+    weight_decay=0.0005)
 
 # runtime settings
 work_dir = './work_dirs/experiment20220628_with_pseudo_largedatanum_onlyheader/'
