@@ -20,6 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('--workers-per-gpu', default=4, type=int)
     parser.add_argument('--lr', default=0.0075, type=float)
     parser.add_argument('--weight_decay', default=0.0005, type=float)
+    parser.add_argument('--momentum', default=0.9, type=float)
 
     args = parser.parse_args()
     # ----settings-----
