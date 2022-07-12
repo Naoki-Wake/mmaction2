@@ -27,7 +27,7 @@ if __name__ == '__main__':
     fp_config_out = '/tmp/config.py'
     if args.work_dir_name == '':
         work_dir_name = "lr_{}_wd_{}_momentum_{}".format(args.lr, args.weight_decay, args.momentum)
-    print('work_dir_name:', work_dir_name)
+    #print('work_dir_name:', work_dir_name)
     cfg = Config.fromfile(osp.join(args.dir_root,args.config))
     cfg_options = {'work_dir': osp.join(args.work_dir_root, work_dir_name),
                    'data.train.ann_file': osp.join(args.train_file_dir, 'breakfast_train_list_videos.txt'),
