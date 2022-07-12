@@ -1,5 +1,7 @@
 from linecache import lazycache
 
+from cv2 import moments
+
 
 _base_ = [
     '../../_base_/models/breakfast_nonaddlayer_r50.py', '../../_base_/schedules/sgd_tsm_50e.py',
@@ -92,7 +94,8 @@ evaluation = dict(
 # optimizer
 optimizer = dict(
     lr=0.0075,  # this lr is used for 8 gpus
-    weight_decay=0.0005)
+    weight_decay=0.0005,
+    momentum=0.9)
 
 # runtime settings
 work_dir = './work_dirs/experiment20220628_with_pseudo_largedatanum_onlyheader/'
