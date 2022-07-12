@@ -20,7 +20,7 @@ if __name__ == '__main__':
     # ----settings-----
     fp_config_out = '/tmp/config.py'
     cfg = Config.fromfile(osp.join(args.dir_root,args.config))
-    cfg_options = {'work_dir': osp.join(args.work_dir,args.work_dir_name),
+    cfg_options = {'work_dir': osp.join(args.work_dir_root,args.work_dir_name),
                    'data.train.ann_file': osp.join(args.train_file_dir, 'breakfast_train_list_videos.txt'),
                    'data.val.ann_file': osp.join(args.train_file_dir, 'breakfast_val_list_videos.txt'),
                    'data.test.ann_file': osp.join(args.train_file_dir, 'breakfast_test_list_videos.txt'),
