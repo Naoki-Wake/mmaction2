@@ -46,7 +46,7 @@ if __name__ == '__main__':
     cfg.dump(fp_config_out)
 
     train_command = str(osp.join(args.dir_root, "tools/dist_train_onlyheader.sh")) + \
-        + " " + fp_config_out + " 1 --validate --seed 0 --deterministic --gpu-ids 0"
+        " " + fp_config_out + " 1 --validate --seed 0 --deterministic --gpu-ids 0"
     import subprocess
     print(train_command)
     #subprocess.run([train_command], shell=True)
