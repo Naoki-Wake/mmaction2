@@ -17,7 +17,7 @@ if __name__ == '__main__':
     parser.add_argument('--work-dir-name', default='', type=str)
     parser.add_argument('--train-file-dir', default='/lfovision_sthv2_breakfast/annotations/with_pseudo_largedatanum/', type=str)
     parser.add_argument('--dir-videos-root', default='/lfovision_sthv2_breakfast/', type=str)
-    parser.add_argument('--videos-per-gpu', default=100, type=int)
+    parser.add_argument('--videos-per-gpu', default=200, type=int)
     parser.add_argument('--workers-per-gpu', default=8, type=int)
     parser.add_argument('--lr', default=0.0075, type=float)
     parser.add_argument('--weight-decay', default=0.0005, type=float)
