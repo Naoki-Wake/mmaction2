@@ -6,6 +6,7 @@ import os
 import time
 from glob import glob
 import argparse
+import numpy as np
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run breakfast')
