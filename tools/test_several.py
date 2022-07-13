@@ -394,7 +394,7 @@ def main():
     out_json = {}
     out_json['top1_acc'] = scores_top1_acc
     out_json['top5_acc'] = scores_top5_acc
-    with open(args.out_several) as f:
+    with open(args.out_several,'w') as f:
         json.dump(out_json, f)
 
 if __name__ == '__main__':
