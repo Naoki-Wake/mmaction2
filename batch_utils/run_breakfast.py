@@ -30,7 +30,24 @@ if __name__ == '__main__':
     work_dir_name = args.work_dir_name
     print('work_dir_name:', work_dir_name)
     cfg = Config.fromfile(osp.join(args.dir_root,args.config))
-    cfg_options = {}
+    cfg_options = {'work_dir': osp.join(args.work_dir_root, work_dir_name),
+                   'data.train.ann_file': osp.join(args.train_file_dir, 'breakfast_train_list_videos.txt'),
+                   'data.val.ann_file': osp.join(args.train_file_dir, 'breakfast_val_list_videos.txt'),
+                   'data.test.ann_file': osp.join(args.train_file_dir, 'breakfast_test_list_videos.txt'),
+                   'data.train.data_prefix': args.dir_videos_root,
+                   'data.val.data_prefix': args.dir_videos_root,
+                   'data.test.data_prefix': args.dir_videos_root,
+                   'load_from': args.load_from,
+                   'data_root': args.dir_videos_root,
+                   'data_root_val': args.dir_videos_root,
+                   'ann_file_train': osp.join(args.train_file_dir, 'breakfast_train_list_videos.txt'),
+                   'ann_file_val': osp.join(args.train_file_dir, 'breakfast_val_list_videos.txt'),
+                   'ann_file_test': osp.join(args.train_file_dir, 'breakfast_test_list_videos.txt'), 
+                   'data.videos_per_gpu': args.videos_per_gpu,
+                   'data.workers_per_gpu': args.workers_per_gpu,
+                   'optimizer.lr': args.lr,
+                   'optimizer.weight_decay': args.weight_decay,
+                   'optimizer.momentum': args.momentum,}
     cfg.merge_from_dict(cfg_options)
     cfg.dump(fp_config_out)
 
