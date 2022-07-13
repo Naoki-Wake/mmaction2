@@ -21,6 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', default=0.0075, type=float)
     parser.add_argument('--weight-decay', default=0.0005, type=float)
     parser.add_argument('--momentum', default=0.9, type=float)
+    parser.add_argument('--epochs', default=50, type=int)
 
     args = parser.parse_args()
     # ----settings-----
@@ -48,7 +49,8 @@ if __name__ == '__main__':
                    'data.workers_per_gpu': args.workers_per_gpu,
                    'optimizer.lr': args.lr,
                    'optimizer.weight_decay': args.weight_decay,
-                   'optimizer.momentum': args.momentum,}
+                   'optimizer.momentum': args.momentum,
+                   'total_epochs': args.epochs,}
     cfg.merge_from_dict(cfg_options)
     cfg.dump(fp_config_out)
 
