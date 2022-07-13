@@ -59,8 +59,11 @@ if __name__ == '__main__':
         " " + fp_config_out + " 1 --validate --seed 0 --deterministic --gpu-ids 0"
     import subprocess
     print(train_command)
-    os.system(train_command)
-#
+    if not osp.exists(osp.join(
+        osp.join(args.work_dir_root,work_dir_name),
+        'epoch_50.pth')):
+        os.system(train_command)
+
     test_command = "python " + str(osp.join(args.dir_root, "tools/test_several.py")) + " " + fp_config_out + " " + osp.join(
         osp.join(args.work_dir_root,work_dir_name),
         'epoch_50.pth') + " --eval top_k_accuracy mean_class_accuracy --out " + osp.join(
