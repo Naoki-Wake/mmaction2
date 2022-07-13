@@ -72,8 +72,7 @@ if __name__ == '__main__':
                     'optimizer.lr': args.lr,
                     'optimizer.weight_decay': args.weight_decay,
                     'optimizer.momentum': args.momentum,
-                    'total_epochs': args.epochs,
-                    'resume_from': osp.join(args.work_dir_root, work_dir_name,'latest.pth')}
+                    'total_epochs': args.epochs}
 
     cfg.merge_from_dict(cfg_options)
     cfg.dump(fp_config_out)
