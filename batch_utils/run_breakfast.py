@@ -64,5 +64,7 @@ if __name__ == '__main__':
         osp.join(args.work_dir_root,work_dir_name),
         'epoch_50.pth') + " --eval top_k_accuracy mean_class_accuracy --out " + osp.join(
         osp.join(args.work_dir_root,work_dir_name),
-        'test_result.json')
+        'test_result.json') + " --out-several " + osp.join(
+        osp.join(args.work_dir_root,work_dir_name),
+        'test_result_several.json')
     print(test_command)
