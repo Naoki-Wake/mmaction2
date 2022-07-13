@@ -1,8 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
+from ast import arg
 import os
 import os.path as osp
 import warnings
+import json
 
 import mmcv
 import torch
@@ -47,6 +49,10 @@ def parse_args():
         '--out',
         default=None,
         help='output result file in pkl/yaml/json format')
+    parser.add_argument(
+        '--out-several',
+        default=None,
+        help='output result across trials')
     parser.add_argument(
         '--fuse-conv-bn',
         action='store_true',
@@ -385,7 +391,11 @@ def main():
     import numpy as np
     print(f'\nAverage top1_acc: {np.mean(scores_top1_acc):.04f}; std {np.std(scores_top1_acc):.04f}')
     print(f'Average top5_acc: {np.mean(scores_top5_acc):.04f}; std {np.std(scores_top5_acc):.04f}')
-
+    out_json = {}
+    out_json['top1_acc'] = scores_top1_acc
+    out_json['top5_acc'] = scores_top5_acc
+    with open(args.out_several) as f:
+        json.dump(out_json, f)
 
 if __name__ == '__main__':
     main()

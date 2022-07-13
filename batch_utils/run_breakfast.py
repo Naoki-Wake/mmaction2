@@ -62,7 +62,7 @@ if __name__ == '__main__':
 #
     test_command = "python " + str(osp.join(args.dir_root, "tools/test_several.py")) + " " + fp_config_out + " " + osp.join(
         osp.join(args.work_dir_root,work_dir_name),
-        'epoch_0.pth') + " --eval top_k_accuracy mean_class_accuracy --out " + osp.join(
+        'epoch_50.pth') + " --eval top_k_accuracy mean_class_accuracy --out " + osp.join(
         osp.join(args.work_dir_root,work_dir_name),
         'test_result.json')
     print(test_command)
