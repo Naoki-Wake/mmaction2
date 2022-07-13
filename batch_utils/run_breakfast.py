@@ -54,7 +54,7 @@ if __name__ == '__main__':
                    'total_epochs': args.epochs,
                    'resume_from': osp.join(args.work_dir_root, work_dir_name,'latest.pth')}
     if not osp.exists(osp.join(args.work_dir_root, work_dir_name,'latest.pth')):
-        cfg_options.resume_from = None
+        cfg_options['resume_from'] = None
     cfg.merge_from_dict(cfg_options)
     cfg.dump(fp_config_out)
 
