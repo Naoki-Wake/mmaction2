@@ -58,7 +58,7 @@ if __name__ == '__main__':
         " " + fp_config_out + " 1 --validate --seed 0 --deterministic --gpu-ids 0"
     import subprocess
     print(train_command)
-    #subprocess.run([train_command], shell=True)
+    subprocess.run([train_command], shell=True)
 #
     test_command = "python " + str(osp.join(args.dir_root, "tools/test_several.py")) + " " + fp_config_out + " " + osp.join(
         osp.join(args.work_dir_root,work_dir_name),
@@ -68,3 +68,4 @@ if __name__ == '__main__':
         osp.join(args.work_dir_root,work_dir_name),
         'test_result_several.json')
     print(test_command)
+    subprocess.run([train_command], shell=True)
