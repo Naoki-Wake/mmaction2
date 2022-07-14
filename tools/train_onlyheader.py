@@ -186,7 +186,7 @@ def main():
         # checkpoints as meta data
         cfg.checkpoint_config.meta = dict(
             mmaction_version=__version__ + get_git_hash(digits=7),
-            config=cfg.text)
+            config=cfg.pretty_text)
     #FIX weights
     count_parameters(model)
     fix_parameters(model)                        
