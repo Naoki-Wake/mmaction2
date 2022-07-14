@@ -17,8 +17,8 @@ if __name__ == '__main__':
     parser.add_argument('--work-dir-name', default='', type=str)
     parser.add_argument('--train-file-dir', default='/lfovision_sthv2_breakfast/annotations/with_pseudo_largedatanum/', type=str)
     parser.add_argument('--dir-videos-root', default='/lfovision_sthv2_breakfast/', type=str)
-    parser.add_argument('--videos-per-gpu', default=100, type=int)
-    parser.add_argument('--workers-per-gpu', default=40, type=int)
+    parser.add_argument('--videos-per-gpu', default=80, type=int)
+    parser.add_argument('--workers-per-gpu', default=20, type=int)
     parser.add_argument('--lr', default=0.0075, type=float)
     parser.add_argument('--weight-decay', default=0.0005, type=float)
     parser.add_argument('--momentum', default=0.9, type=float)
@@ -87,12 +87,13 @@ if __name__ == '__main__':
         'epoch_50.pth')):
         os.system(train_command)
 
-    test_command = "python " + str(osp.join(args.dir_root, "tools/test_several.py")) + " " + fp_config_out + " " + osp.join(
-        osp.join(args.work_dir_root,work_dir_name),
-        'epoch_50.pth') + " --eval top_k_accuracy mean_class_accuracy --out " + osp.join(
-        osp.join(args.work_dir_root,work_dir_name),
-        'test_result.json') + " --out-several " + osp.join(
-        osp.join(args.work_dir_root,work_dir_name),
-        'test_result_several.json')
-    print(test_command)
-    os.system(train_command)
+    #test_command = "python " + str(osp.join(args.dir_root, "tools/test_several.py")) + " " + fp_config_out + " " + osp.join(
+    #    osp.join(args.work_dir_root,work_dir_name),
+    #    'epoch_50.pth') + " --eval top_k_accuracy mean_class_accuracy --out " + osp.join(
+    #    osp.join(args.work_dir_root,work_dir_name),
+    #    'test_result.json') + " --out-several " + osp.join(
+    #    osp.join(args.work_dir_root,work_dir_name),
+    #    'test_result_several.json')
+    #print(test_command)
+    #os.system(train_command)
+#
