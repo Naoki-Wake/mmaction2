@@ -99,5 +99,4 @@ if __name__ == '__main__':
         osp.join(args.work_dir_root,work_dir_name),
         'test_result_several.json')
     print(test_command)
-    os.system(train_command)
-#
+    os.system(test_command)
