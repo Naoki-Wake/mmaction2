@@ -90,10 +90,22 @@ evaluation = dict(
     interval=2, metrics=['top_k_accuracy', 'mean_class_accuracy'])
 
 # optimizer
-optimizer = dict(
-    lr=0.0075,  # this lr is used for 8 gpus
-    weight_decay=0.0005,
-    momentum=0.9,)
-
+#optimizer = dict(
+#    lr=0.0075,  # this lr is used for 8 gpus
+#    weight_decay=0.0005)
+optimizer = dict(type='SGD', lr=0.075, momentum=0.9, weight_decay=0.00001) 
+#Adam
+# type='Adam',  # Type of optimizer, refer to https://github.com/open-mmlab/mmcv/blob/master/mmcv/runner/optimizer/default_constructor.py#L13 for more details
+# lr=0.001,  # Learning rate, see detail usages of the parameters in the documentation of PyTorch
+# weight_decay=0.0001)  # Weight decay of Adam
+lr_config = dict(
+    policy='CosineAnnealing',
+    by_epoch=False,
+    min_lr=0,
+    warmup='linear',
+    warmup_by_epoch=True,
+    warmup_iters=1,
+    warmup_ratio=0.1)
+total_epochs = 50
 # runtime settings
 work_dir = './work_dirs/experiment20220628_with_pseudo_largedatanum_onlyheader/'

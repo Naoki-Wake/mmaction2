@@ -23,12 +23,15 @@ if __name__ == '__main__':
     parser.add_argument('--weight-decay', default=0.0005, type=float)
     parser.add_argument('--momentum', default=0.9, type=float)
     parser.add_argument('--epochs', default=50, type=int)
-
+    parser.add_argument('--bn-freeze', default=True, type=bool)
     args = parser.parse_args()
     # ----settings-----
     fp_config_out = '/tmp/config.py'
     if args.work_dir_name == '':
-        work_dir_name = "lr_{}_wd_{}_momentum_{}".format(args.lr, args.weight_decay, args.momentum)
+        if args.bn_freeze:
+            work_dir_name = "lr_{}_wd_{}_momentum_{}_bn_true".format(args.lr, args.weight_decay, args.momentum)
+        else:
+            work_dir_name = "lr_{}_wd_{}_momentum_{}".format(args.lr, args.weight_decay, args.momentum)
     else:
         work_dir_name = args.work_dir_name
     print('work_dir_name:', work_dir_name)
@@ -52,6 +55,7 @@ if __name__ == '__main__':
                     'optimizer.lr': args.lr,
                     'optimizer.weight_decay': args.weight_decay,
                     'optimizer.momentum': args.momentum,
+                    'model.backbone.norm_eval': args.bn_freeze,
                     'total_epochs': args.epochs}
     else:
         cfg_options = {'work_dir': osp.join(args.work_dir_root, work_dir_name),
@@ -87,13 +91,13 @@ if __name__ == '__main__':
         'epoch_50.pth')):
         os.system(train_command)
 
-    #test_command = "python " + str(osp.join(args.dir_root, "tools/test_several.py")) + " " + fp_config_out + " " + osp.join(
-    #    osp.join(args.work_dir_root,work_dir_name),
-    #    'epoch_50.pth') + " --eval top_k_accuracy mean_class_accuracy --out " + osp.join(
-    #    osp.join(args.work_dir_root,work_dir_name),
-    #    'test_result.json') + " --out-several " + osp.join(
-    #    osp.join(args.work_dir_root,work_dir_name),
-    #    'test_result_several.json')
-    #print(test_command)
-    #os.system(train_command)
+    test_command = "python " + str(osp.join(args.dir_root, "tools/test_several.py")) + " " + fp_config_out + " " + osp.join(
+        osp.join(args.work_dir_root,work_dir_name),
+        'epoch_50.pth') + " --eval top_k_accuracy mean_class_accuracy --out " + osp.join(
+        osp.join(args.work_dir_root,work_dir_name),
+        'test_result.json') + " --out-several " + osp.join(
+        osp.join(args.work_dir_root,work_dir_name),
+        'test_result_several.json')
+    print(test_command)
+    os.system(train_command)
 #
