@@ -90,7 +90,6 @@ def generate_rawframes_filelist():
             val_videos[k] = video
         elif video['subset'] == 'testing':
             test_videos [k] = video
->>>>>>> c1161fe75dc83484718a9416486c1845078b9ce8
 
     def simple_label(anno):
         label = anno[0]['label']
@@ -149,7 +148,7 @@ def generate_rawframes_filelist():
         fout.write('\n'.join(val_lines))
     with open(osp.join(data_file, 'anet_test_video.txt'), 'w') as fout:
         fout.write('\n'.join(test_lines))
-
+train_videos
     def clip_list(k, anno, video_anno):
         duration = anno['duration']
         num_frames = video_anno[0]
@@ -167,13 +166,6 @@ def generate_rawframes_filelist():
             lines.append(newline)
         return lines
 
-<<<<<<< HEAD
-    train_clips, val_clips = [], []
-    for k in training:
-        train_clips.extend(clip_list(k, database[key_dict[k]], training[k]))
-    for k in validation:
-        val_clips.extend(clip_list(k, database[key_dict[k]], validation[k]))
-=======
     train_clips, val_clips, test_clips = [], [], []
     for k in train_videos:
         train_clips.extend(clip_list(k, anet_annotations[k], train_videos[k]))
@@ -181,7 +173,6 @@ def generate_rawframes_filelist():
         val_clips.extend(clip_list(k, anet_annotations[k], val_videos[k]))
     for k in test_videos:
         test_clips.extend(clip_list(k, anet_annotations[k], test_videos[k]))
->>>>>>> c1161fe75dc83484718a9416486c1845078b9ce8
 
     with open(osp.join(data_file, 'anet_train_clip.txt'), 'w') as fout:
         fout.write('\n'.join(train_clips))
