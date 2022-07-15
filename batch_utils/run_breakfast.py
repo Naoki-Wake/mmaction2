@@ -44,14 +44,16 @@ if __name__ == '__main__':
     # ----settings-----
     fp_config_out = '/tmp/config.py'
     if args.work_dir_name == '':
-        if args.bn_freeze:
-            work_dir_name = "lr_{}_wd_{}_momentum_{}_bn_true".format(
-                args.lr, args.weight_decay, args.momentum)
-        else:
-            work_dir_name = "lr_{}_wd_{}_momentum_{}".format(
-                args.lr, args.weight_decay, args.momentum)
+        work_dir_name = "lr_{}_wd_{}_momentum_{}".format(
+            args.lr, args.weight_decay, args.momentum)
     else:
         work_dir_name = args.work_dir_name
+
+    if args.bn_freeze:
+        work_dir_name += "_bn_true"
+    if args.scheduler_cosine:
+        work_dir_name += "_cosine"
+
     print('work_dir_name:', work_dir_name)
     cfg = Config.fromfile(osp.join(args.dir_root, args.config))
 
