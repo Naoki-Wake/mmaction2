@@ -110,6 +110,8 @@ if __name__ == '__main__':
             warmup_by_epoch=True,
             warmup_iters=1,
             warmup_ratio=0.1)
+    else:
+        cfg_options['lr_config'] = dict(policy='step', step=[20, 40])
     cfg.merge_from_dict(cfg_options)
     cfg.dump(fp_config_out)
 
