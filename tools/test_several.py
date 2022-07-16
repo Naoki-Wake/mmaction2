@@ -394,6 +394,8 @@ def main():
     out_json = {}
     out_json['top1_acc'] = scores_top1_acc
     out_json['top5_acc'] = scores_top5_acc
+    print(scores_top1_acc)
+    print('writing to json file:' + args.out_several)
     with open(args.out_several,'w') as f:
         json.dump(out_json, f)
 
