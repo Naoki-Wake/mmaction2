@@ -38,8 +38,8 @@ if __name__ == '__main__':
     parser.add_argument('--weight-decay', default=0.0005, type=float)
     parser.add_argument('--momentum', default=0.9, type=float)
     parser.add_argument('--epochs', default=50, type=int)
-    parser.add_argument('--bn-freeze', default=True, type=bool)
-    parser.add_argument('--scheduler-cosine', default=False, type=bool)
+    parser.add_argument('--bn-freeze', default=1, type=int)
+    parser.add_argument('--scheduler-cosine', default=0, type=int)
     args = parser.parse_args()
     # ----settings-----
     fp_config_out = '/tmp/config.py'
@@ -49,9 +49,12 @@ if __name__ == '__main__':
     else:
         work_dir_name = args.work_dir_name
 
-    if args.bn_freeze:
+    if args.bn_freeze == 1:
         work_dir_name += "_bn_true"
-    if args.scheduler_cosine:
+        bool_bn_freeze = True
+    else:
+        bool_bn_freeze = False
+    if args.scheduler_cosine == 1:
         work_dir_name += "_cosine"
 
     print('work_dir_name:', work_dir_name)
@@ -90,7 +93,7 @@ if __name__ == '__main__':
         'optimizer.lr': args.lr,
         'optimizer.weight_decay': args.weight_decay,
         'optimizer.momentum': args.momentum,
-        'model.backbone.norm_eval': args.bn_freeze,
+        'model.backbone.norm_eval': bool_bn_freeze,
         'total_epochs': args.epochs}
     if osp.exists(
         osp.join(
@@ -101,7 +104,7 @@ if __name__ == '__main__':
             args.work_dir_root,
             work_dir_name,
             'latest.pth')
-    if args.scheduler_cosine:
+    if args.scheduler_cosine == 1:
         cfg_options['lr_config'] = dict(
             policy='CosineAnnealing',
             by_epoch=False,
