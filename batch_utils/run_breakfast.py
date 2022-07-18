@@ -63,7 +63,7 @@ if __name__ == '__main__':
             'breakfast_train_list_videos.txt')
     else:
         train_file_path = args.train_file_path
-    
+
     if len(args.val_file_path) == 0:
         val_file_path = osp.join(
             args.train_file_dir,
@@ -77,7 +77,6 @@ if __name__ == '__main__':
             'breakfast_test_list_videos.txt')
     else:
         test_file_path = args.test_file_path
-    
 
     fp_config_out = '/tmp/config.py'
     if args.work_dir_name == '':
