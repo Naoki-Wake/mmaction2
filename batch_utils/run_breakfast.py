@@ -126,7 +126,9 @@ if __name__ == '__main__':
             osp.join(args.work_dir_root, work_dir_name),
             'epoch_50.pth')):
         os.system(train_command)
-    else:
+    if osp.exists(osp.join(
+            osp.join(args.work_dir_root, work_dir_name),
+            'epoch_50.pth')):
         test_command = "python " + str(
             osp.join(
                 args.dir_root,
