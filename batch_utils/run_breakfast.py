@@ -161,7 +161,7 @@ if __name__ == '__main__':
             " " + fp_config_out + " 1 --validate --seed 0 --deterministic --gpu-ids 0"
     else:
         train_command = "python " + str(osp.join(args.dir_root, "tools/train.py")) + \
-            " " + fp_config_out + " --validate --seed 0 --deterministic --gpu-ids 0"
+            " " + fp_config_out + " --validate --seed 0 --deterministic"
     import subprocess
     print(train_command)
     if not osp.exists(osp.join(
