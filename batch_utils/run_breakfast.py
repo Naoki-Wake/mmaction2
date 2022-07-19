@@ -10,7 +10,7 @@ import numpy as np
 
 # example
 # python /tmp/repo/batch_utils/run_breakfast.py --lr 0.01 --bn-freeze 0 --scheduler-cosine 1 --workers-per-gpu 15
-# python /tmp/repo/batch_utils/run_breakfast.py --lr 0.01 --bn-freeze 1 --scheduler-cosine 1 --workers-per-gpu 15 --load-from /lfovision_log/tsm_learningrate/lr_0.01_wd_0.0005_momentum_0.9_bn_true_cosine/epoch_50.pth --work-dir-root /lfovision_log/tsm_after_manual_correction/ --train-file-path /lfovision_sthv2_breakfast/annotations/experiment_tsm_after_manual_correction/iteration_1_after_manualcheck/breakfast_train_list_videos_mixed.txt --val-file-path /lfovision_sthv2_breakfast/annotations/experiment_tsm_after_manual_correction/breakfast_val_list_videos.txt --test-file-path /lfovision_sthv2_breakfast/annotations/experiment_tsm_after_manual_correction/breakfast_test_list_videos.txt
+# python /tmp/repo/batch_utils/run_breakfast.py --work-dir-name --lr 0.01 --bn-freeze 1 --scheduler-cosine 1 --workers-per-gpu 15 --load-from /lfovision_log/tsm_learningrate/lr_0.01_wd_0.0005_momentum_0.9_bn_true_cosine --work-dir-root /lfovision_log/tsm_after_manual_correction/ --train-file-path /lfovision_sthv2_breakfast/annotations/experiment_tsm_after_manual_correction/iteration_1_after_manualcheck/breakfast_train_list_videos_mixed.txt --val-file-path /lfovision_sthv2_breakfast/annotations/experiment_tsm_after_manual_correction/breakfast_val_list_videos.txt --test-file-path /lfovision_sthv2_breakfast/annotations/experiment_tsm_after_manual_correction/breakfast_test_list_videos.txt
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run breakfast')
     parser.add_argument('--dir-root', default='/tmp/repo', type=str)
@@ -55,6 +55,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', default=50, type=int)
     parser.add_argument('--bn-freeze', default=1, type=int)
     parser.add_argument('--scheduler-cosine', default=0, type=int)
+    parser.add_argument('--only-header', default=1, type=int)
     args = parser.parse_args()
     # ----settings-----
     if len(args.train_file_path) == 0:
@@ -63,7 +64,7 @@ if __name__ == '__main__':
             'breakfast_train_list_videos.txt')
     else:
         train_file_path = args.train_file_path
-
+    
     if len(args.val_file_path) == 0:
         val_file_path = osp.join(
             args.train_file_dir,
@@ -77,6 +78,7 @@ if __name__ == '__main__':
             'breakfast_test_list_videos.txt')
     else:
         test_file_path = args.test_file_path
+    
 
     fp_config_out = '/tmp/config.py'
     if args.work_dir_name == '':
@@ -142,8 +144,12 @@ if __name__ == '__main__':
     cfg.merge_from_dict(cfg_options)
     cfg.dump(fp_config_out)
 
-    train_command = str(osp.join(args.dir_root, "tools/dist_train_onlyheader.sh")) + \
-        " " + fp_config_out + " 1 --validate --seed 0 --deterministic --gpu-ids 0"
+    if args.only_header == 1:
+        train_command = str(osp.join(args.dir_root, "tools/dist_train_onlyheader.sh")) + \
+            " " + fp_config_out + " 1 --validate --seed 0 --deterministic --gpu-ids 0"
+    else:
+        train_command = str(osp.join(args.dir_root, "tools/dist_train.sh")) + \
+            " " + fp_config_out + " 1 --validate --seed 0 --deterministic --gpu-ids 0"
     import subprocess
     print(train_command)
     if not osp.exists(osp.join(
