@@ -128,7 +128,7 @@ if __name__ == '__main__':
         'optimizer.weight_decay': args.weight_decay,
         'optimizer.momentum': args.momentum,
         'model.backbone.norm_eval': bool_bn_freeze,
-        'model.backbone.frozen_stages': 1,
+        'model.backbone.frozen_stages': -1,
         # frozen_stages (int): Stages to be frozen (all param fixed). -1 means
         # not freezing any parameters. Default: -1.
         'total_epochs': args.epochs}
