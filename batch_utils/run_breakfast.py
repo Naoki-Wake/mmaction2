@@ -10,7 +10,16 @@ import numpy as np
 
 # example
 # python /tmp/repo/batch_utils/run_breakfast.py --lr 0.01 --bn-freeze 0 --scheduler-cosine 1 --workers-per-gpu 15
-# python /tmp/repo/batch_utils/run_breakfast.py --work-dir-name --lr 0.01 --bn-freeze 1 --scheduler-cosine 1 --workers-per-gpu 15 --load-from /lfovision_log/tsm_learningrate/lr_0.01_wd_0.0005_momentum_0.9_bn_true_cosine --work-dir-root /lfovision_log/tsm_after_manual_correction/ --train-file-path /lfovision_sthv2_breakfast/annotations/experiment_tsm_after_manual_correction/iteration_1_after_manualcheck/breakfast_train_list_videos_mixed.txt --val-file-path /lfovision_sthv2_breakfast/annotations/experiment_tsm_after_manual_correction/breakfast_val_list_videos.txt --test-file-path /lfovision_sthv2_breakfast/annotations/experiment_tsm_after_manual_correction/breakfast_test_list_videos.txt
+# python /tmp/repo/batch_utils/run_breakfast.py --work-dir-name --lr 0.01
+# --bn-freeze 1 --scheduler-cosine 1 --workers-per-gpu 15 --load-from
+# /lfovision_log/tsm_learningrate/lr_0.01_wd_0.0005_momentum_0.9_bn_true_cosine
+# --work-dir-root /lfovision_log/tsm_after_manual_correction/
+# --train-file-path
+# /lfovision_sthv2_breakfast/annotations/experiment_tsm_after_manual_correction/iteration_1_after_manualcheck/breakfast_train_list_videos_mixed.txt
+# --val-file-path
+# /lfovision_sthv2_breakfast/annotations/experiment_tsm_after_manual_correction/breakfast_val_list_videos.txt
+# --test-file-path
+# /lfovision_sthv2_breakfast/annotations/experiment_tsm_after_manual_correction/breakfast_test_list_videos.txt
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run breakfast')
     parser.add_argument('--dir-root', default='/tmp/repo', type=str)
@@ -64,7 +73,7 @@ if __name__ == '__main__':
             'breakfast_train_list_videos.txt')
     else:
         train_file_path = args.train_file_path
-    
+
     if len(args.val_file_path) == 0:
         val_file_path = osp.join(
             args.train_file_dir,
@@ -78,7 +87,6 @@ if __name__ == '__main__':
             'breakfast_test_list_videos.txt')
     else:
         test_file_path = args.test_file_path
-    
 
     fp_config_out = '/tmp/config.py'
     if args.work_dir_name == '':
@@ -120,6 +128,9 @@ if __name__ == '__main__':
         'optimizer.weight_decay': args.weight_decay,
         'optimizer.momentum': args.momentum,
         'model.backbone.norm_eval': bool_bn_freeze,
+        'model.backbone.frozen_stages': 1,
+        # frozen_stages (int): Stages to be frozen (all param fixed). -1 means
+        # not freezing any parameters. Default: -1.
         'total_epochs': args.epochs}
     if osp.exists(
         osp.join(
