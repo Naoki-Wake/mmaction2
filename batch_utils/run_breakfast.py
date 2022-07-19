@@ -157,8 +157,10 @@ if __name__ == '__main__':
     cfg.dump(fp_config_out)
 
     if args.only_header == 1:
-        train_command = str(osp.join(args.dir_root, "tools/dist_train_onlyheader.sh")) + \
-            " " + fp_config_out + " 1 --validate --seed 0 --deterministic --gpu-ids 0"
+        #train_command = str(osp.join(args.dir_root, "tools/dist_train_onlyheader.sh")) + \
+        #    " " + fp_config_out + " 1 --validate --seed 0 --deterministic --gpu-ids 0"
+        train_command = "python " + str(osp.join(args.dir_root, "tools/train_onlyheader.py")) + \
+            " " + fp_config_out + " --validate --seed 0 --deterministic --gpu-ids 0"
     else:
         train_command = "python " + str(osp.join(args.dir_root, "tools/train.py")) + \
             " " + fp_config_out + " --validate --seed 0 --deterministic --gpu-ids 0"
