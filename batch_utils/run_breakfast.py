@@ -128,7 +128,7 @@ if __name__ == '__main__':
         'optimizer.weight_decay': args.weight_decay,
         'optimizer.momentum': args.momentum,
         'model.backbone.norm_eval': bool_bn_freeze,
-        'model.backbone.frozen_stages': -1,
+        'model.backbone.frozen_stages': 2,
         # frozen_stages (int): Stages to be frozen (all param fixed). -1 means
         # not freezing any parameters. Default: -1.
         'total_epochs': args.epochs}
@@ -159,7 +159,7 @@ if __name__ == '__main__':
         train_command = str(osp.join(args.dir_root, "tools/dist_train_onlyheader.sh")) + \
             " " + fp_config_out + " 1 --validate --seed 0 --deterministic --gpu-ids 0"
     else:
-        train_command = str(osp.join(args.dir_root, "tools/dist_train.sh")) + \
+        train_command = "python " + str(osp.join(args.dir_root, "tools/train.py")) + \
             " " + fp_config_out + " 1 --validate --seed 0 --deterministic --gpu-ids 0"
     import subprocess
     print(train_command)
