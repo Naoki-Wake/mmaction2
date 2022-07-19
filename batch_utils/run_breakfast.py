@@ -65,6 +65,7 @@ if __name__ == '__main__':
     parser.add_argument('--bn-freeze', default=1, type=int)
     parser.add_argument('--scheduler-cosine', default=0, type=int)
     parser.add_argument('--only-header', default=1, type=int)
+    parser.add_argument('--base-frozen-stages', default=-1, type=int)
     args = parser.parse_args()
     # ----settings-----
     if len(args.train_file_path) == 0:
@@ -128,7 +129,7 @@ if __name__ == '__main__':
         'optimizer.weight_decay': args.weight_decay,
         'optimizer.momentum': args.momentum,
         'model.backbone.norm_eval': bool_bn_freeze,
-        'model.backbone.frozen_stages': 2,
+        'model.backbone.frozen_stages': args.base_frozen_stages,
         # frozen_stages (int): Stages to be frozen (all param fixed). -1 means
         # not freezing any parameters. Default: -1.
         'total_epochs': args.epochs}
